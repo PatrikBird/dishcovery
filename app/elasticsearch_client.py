@@ -64,16 +64,13 @@ class ElasticsearchClient:
     async def bulk_index_recipes(self, recipes: list, index_name: str = None):
         """Bulk index a list of recipes"""
         index_name = index_name or settings.ELASTICSEARCH_INDEX
-        
+
         # Prepare bulk actions
         actions = []
         for recipe in recipes:
-            action = {
-                "_index": index_name,
-                "_source": recipe
-            }
+            action = {"_index": index_name, "_source": recipe}
             actions.append(action)
-        
+
         try:
             result = await self._execute_bulk(actions)
             return result
@@ -83,6 +80,7 @@ class ElasticsearchClient:
     @run_in_threadpool
     def _execute_bulk(self, actions: list):
         from elasticsearch.helpers import bulk
+
         return bulk(self.client, actions)
 
 
