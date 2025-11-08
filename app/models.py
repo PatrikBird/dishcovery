@@ -71,10 +71,19 @@ class SearchRequest(BaseModel):
 
     # Pagination
     size: int = Field(
-        10, ge=1, le=100, description="Number of results to return", example=10
+        10,
+        ge=0,
+        le=100,
+        description="Number of results to return (0 for aggregations only)",
+        example=10,
     )
     from_: int = Field(
         0, ge=0, description="Offset for pagination (0-based)", alias="from", example=0
+    )
+
+    # Aggregations control
+    include_aggregations: bool = Field(
+        False, description="Include aggregation data for filtering and insights"
     )
 
 
@@ -95,12 +104,57 @@ class Recipe(BaseModel):
     directions_raw: Optional[List[str]] = None  # Array of direction strings
 
 
+class AggregationBucket(BaseModel):
+    """Single aggregation bucket (e.g., one cuisine type)"""
+
+    key: str = Field(description="The bucket key (e.g., 'italian')")
+    doc_count: int = Field(description="Number of documents in this bucket")
+
+
+class AggregationStats(BaseModel):
+    """Statistics aggregation results"""
+
+    min: Optional[float] = None
+    max: Optional[float] = None
+    avg: Optional[float] = None
+    sum: Optional[float] = None
+
+
+class Aggregations(BaseModel):
+    """Aggregation results for search facets and insights"""
+
+    cuisines: Optional[List[AggregationBucket]] = Field(
+        None, description="Recipe count by cuisine"
+    )
+    difficulty_levels: Optional[List[AggregationBucket]] = Field(
+        None, description="Recipe count by difficulty"
+    )
+    dietary_profiles: Optional[List[AggregationBucket]] = Field(
+        None, description="Recipe count by dietary profile (vegan, vegetarian, etc.)"
+    )
+    healthiness_stats: Optional[AggregationStats] = Field(
+        None, description="Healthiness score statistics"
+    )
+    prep_time_ranges: Optional[List[AggregationBucket]] = Field(
+        None, description="Recipe count by prep time ranges"
+    )
+    cook_time_ranges: Optional[List[AggregationBucket]] = Field(
+        None, description="Recipe count by cooking time ranges"
+    )
+    total_time_ranges: Optional[List[AggregationBucket]] = Field(
+        None, description="Recipe count by total time (prep + cook) ranges"
+    )
+
+
 class SearchResponse(BaseModel):
     """Search results response"""
 
     total: int = Field(description="Total number of matching recipes")
     recipes: List[Recipe] = Field(description="Array of recipe results")
     took_ms: int = Field(description="Search execution time in milliseconds")
+    aggregations: Optional[Aggregations] = Field(
+        None, description="Aggregation results for filtering and insights"
+    )
 
 
 class BulkLoadResponse(BaseModel):
