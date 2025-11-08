@@ -1,9 +1,7 @@
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException
 from elasticsearch_client import es_client
 from config import settings
-from models import SearchResponse, Recipe, BulkLoadResponse
-from typing import Optional
+from models import SearchResponse, Recipe, BulkLoadResponse, SearchRequest
 import json
 import time
 import os
@@ -33,70 +31,6 @@ async def health_check():
     }
 
 
-@app.get("/search", response_model=SearchResponse)
-async def search_recipes(
-    q: Optional[str] = Query(None, description="Search query for recipe titles, ingredients, descriptions"),
-    cuisine: Optional[str] = Query(None, description="Filter by cuisine (e.g. 'Italian', 'Asian')"),
-    max_prep_time: Optional[int] = Query(None, description="Maximum prep time in minutes"),
-    is_vegan: Optional[bool] = Query(None, description="Filter for vegan recipes"),
-    size: int = Query(10, ge=1, le=50, description="Number of results to return")
-):
-    """Basic search endpoint with query parameters"""
-    
-    # Build Elasticsearch query
-    query_body = {
-        "size": size,
-        "query": {
-            "bool": {
-                "must": [],
-                "filter": []
-            }
-        }
-    }
-    
-    # Add text search if provided
-    if q:
-        query_body["query"]["bool"]["must"].append({
-            "multi_match": {
-                "query": q,
-                "fields": ["recipe_title^3", "description^2", "ingredient_text", "directions_text"],
-                "type": "best_fields"
-            }
-        })
-    else:
-        query_body["query"]["bool"]["must"].append({"match_all": {}})
-    
-    # Add filters
-    if cuisine:
-        query_body["query"]["bool"]["filter"].append({
-            "term": {"cuisine_list": cuisine}
-        })
-    
-    if max_prep_time:
-        query_body["query"]["bool"]["filter"].append({
-            "range": {"est_prep_time_min": {"lte": max_prep_time}}
-        })
-    
-    if is_vegan is not None:
-        query_body["query"]["bool"]["filter"].append({
-            "term": {"is_vegan": is_vegan}
-        })
-    
-    # Execute search
-    result = await es_client.search_recipes(query_body)
-    
-    # Parse results
-    recipes = []
-    for hit in result["hits"]["hits"]:
-        source = hit["_source"]
-        recipe = Recipe(**source)
-        recipes.append(recipe)
-    
-    return SearchResponse(
-        total=result["hits"]["total"]["value"],
-        recipes=recipes,
-        took_ms=result["took"]
-    )
 
 
 @app.post("/bulk-load", response_model=BulkLoadResponse)
@@ -137,3 +71,99 @@ async def bulk_load_recipes():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Bulk loading failed: {str(e)}")
+
+
+@app.post("/search", response_model=SearchResponse)
+async def search_recipes(request: SearchRequest):
+    """Search recipes with flexible filtering options"""
+    
+    # Build Elasticsearch query
+    query_body = {
+        "size": request.size,
+        "from": request.from_,
+        "query": {
+            "bool": {
+                "must": [],
+                "filter": []
+            }
+        }
+    }
+    
+    # Add text search if provided
+    if request.query:
+        query_body["query"]["bool"]["must"].append({
+            "multi_match": {
+                "query": request.query,
+                "fields": ["recipe_title^3", "description^2", "ingredient_text", "directions_text"],
+                "type": "best_fields"
+            }
+        })
+    else:
+        query_body["query"]["bool"]["must"].append({"match_all": {}})
+    
+    # Add cuisine filters (can be multiple)
+    if request.cuisines:
+        query_body["query"]["bool"]["filter"].append({
+            "terms": {"cuisine_list": request.cuisines}
+        })
+    
+    # Add difficulty filter
+    if request.difficulty:
+        query_body["query"]["bool"]["filter"].append({
+            "term": {"difficulty": request.difficulty.value}
+        })
+    
+    # Add prep time filter
+    if request.max_prep_time:
+        query_body["query"]["bool"]["filter"].append({
+            "range": {"est_prep_time_min": {"lte": request.max_prep_time}}
+        })
+    
+    # Add cook time filter
+    if request.max_cook_time:
+        query_body["query"]["bool"]["filter"].append({
+            "range": {"est_cook_time_min": {"lte": request.max_cook_time}}
+        })
+    
+    # Add dietary filters
+    dietary_filters = [
+        (request.is_vegan, "is_vegan"),
+        (request.is_vegetarian, "is_vegetarian"), 
+        (request.is_gluten_free, "is_gluten_free"),
+        (request.is_dairy_free, "is_dairy_free"),
+        (request.is_nut_free, "is_nut_free")
+    ]
+    
+    for value, field in dietary_filters:
+        if value is not None:
+            query_body["query"]["bool"]["filter"].append({
+                "term": {field: value}
+            })
+    
+    # Add healthiness score filters
+    if request.min_healthiness or request.max_healthiness:
+        range_filter = {}
+        if request.min_healthiness:
+            range_filter["gte"] = request.min_healthiness
+        if request.max_healthiness:
+            range_filter["lte"] = request.max_healthiness
+        
+        query_body["query"]["bool"]["filter"].append({
+            "range": {"healthiness_score": range_filter}
+        })
+    
+    # Execute search
+    result = await es_client.search_recipes(query_body)
+    
+    # Parse results
+    recipes = []
+    for hit in result["hits"]["hits"]:
+        source = hit["_source"]
+        recipe = Recipe(**source)
+        recipes.append(recipe)
+    
+    return SearchResponse(
+        total=result["hits"]["total"]["value"],
+        recipes=recipes,
+        took_ms=result["took"]
+    )

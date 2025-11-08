@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from enum import Enum
 
 
@@ -16,33 +16,77 @@ class CookSpeed(str, Enum):
 
 
 class SearchRequest(BaseModel):
-    """Request model for advanced search"""
+    """Request model for recipe search - all fields are optional for maximum flexibility"""
 
+    # Text search
     query: Optional[str] = Field(
-        None, description="Text search across title, description, ingredients"
+        None, 
+        description="Text search across recipe titles, descriptions, ingredients, and directions",
+        example="pasta"
     )
-    cuisines: Optional[List[str]] = Field(None, description="Filter by cuisine types")
+    
+    # Cuisine and category filters
+    cuisines: Optional[List[str]] = Field(
+        None, 
+        description="Filter by one or more cuisine types", 
+        example=["italian", "asian"]
+    )
+    
+    # Difficulty and timing
     difficulty: Optional[DifficultyLevel] = Field(
         None, description="Recipe difficulty level"
     )
     max_prep_time: Optional[int] = Field(
-        None, description="Maximum prep time in minutes"
+        None, 
+        ge=0, 
+        description="Maximum prep time in minutes",
+        example=30
     )
     max_cook_time: Optional[int] = Field(
-        None, description="Maximum cook time in minutes"
+        None, 
+        ge=0, 
+        description="Maximum cook time in minutes",
+        example=60
     )
+    
+    # Dietary preferences
     is_vegan: Optional[bool] = Field(None, description="Filter for vegan recipes")
-    is_vegetarian: Optional[bool] = Field(
-        None, description="Filter for vegetarian recipes"
-    )
-    is_gluten_free: Optional[bool] = Field(
-        None, description="Filter for gluten-free recipes"
-    )
+    is_vegetarian: Optional[bool] = Field(None, description="Filter for vegetarian recipes") 
+    is_gluten_free: Optional[bool] = Field(None, description="Filter for gluten-free recipes")
+    is_dairy_free: Optional[bool] = Field(None, description="Filter for dairy-free recipes")
+    is_nut_free: Optional[bool] = Field(None, description="Filter for nut-free recipes")
+    
+    # Health and nutrition
     min_healthiness: Optional[int] = Field(
-        None, ge=0, le=100, description="Minimum healthiness score (0-100)"
+        None, 
+        ge=0, 
+        le=100, 
+        description="Minimum healthiness score (0-100)",
+        example=70
     )
-    size: int = Field(10, ge=1, le=100, description="Number of results to return")
-    from_: int = Field(0, ge=0, description="Offset for pagination", alias="from")
+    max_healthiness: Optional[int] = Field(
+        None, 
+        ge=0, 
+        le=100, 
+        description="Maximum healthiness score (0-100)",
+        example=90
+    )
+    
+    # Pagination
+    size: int = Field(
+        10, 
+        ge=1, 
+        le=100, 
+        description="Number of results to return",
+        example=10
+    )
+    from_: int = Field(
+        0, 
+        ge=0, 
+        description="Offset for pagination (0-based)",
+        alias="from",
+        example=0
+    )
 
 
 class Recipe(BaseModel):
@@ -59,7 +103,7 @@ class Recipe(BaseModel):
     is_gluten_free: Optional[bool] = None
     healthiness_score: Optional[int] = None
     ingredients_raw: Optional[List[str]] = None  # Array of ingredient strings
-    directions_raw: Optional[List[str]] = None   # Array of direction strings
+    directions_raw: Optional[List[str]] = None  # Array of direction strings
 
 
 class SearchResponse(BaseModel):
