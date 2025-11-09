@@ -14,7 +14,6 @@ import json
 import time
 import os
 
-# Aggregation configurations
 AGGREGATION_CONFIGS = {
     "cuisines": {"terms": {"field": "cuisine_list", "size": 20}},
     "difficulty_levels": {"terms": {"field": "difficulty", "size": 10}},
@@ -101,6 +100,95 @@ def parse_aggregations(aggs_data: dict) -> Aggregations:
     )
 
 
+def build_search_query(request: SearchRequest) -> dict:
+    """Build Elasticsearch query from search request"""
+    query_body = {
+        "size": request.size,
+        "from": request.from_,
+        "query": {"bool": {"must": [], "filter": []}},
+    }
+
+    # Add aggregations and runtime mappings if requested
+    if request.include_aggregations:
+        query_body["runtime_mappings"] = {
+            "total_time_min": {
+                "type": "long",
+                "script": {
+                    "source": "emit((doc['est_prep_time_min'].size() > 0 ? doc['est_prep_time_min'].value : 0) + (doc['est_cook_time_min'].size() > 0 ? doc['est_cook_time_min'].value : 0))"
+                },
+            }
+        }
+        query_body["aggs"] = AGGREGATION_CONFIGS
+
+    # Add text search
+    if request.query:
+        query_body["query"]["bool"]["must"].append(
+            {
+                "multi_match": {
+                    "query": request.query,
+                    "fields": [
+                        "recipe_title^4",
+                        "description^2",
+                        "ingredient_text",
+                        "directions_text",
+                    ],
+                    "type": "best_fields",
+                    "fuzziness": request.fuzziness or "AUTO",
+                }
+            }
+        )
+    else:
+        query_body["query"]["bool"]["must"].append({"match_all": {}})
+
+    # Add filters
+    if request.cuisines:
+        query_body["query"]["bool"]["filter"].append(
+            {"terms": {"cuisine_list": request.cuisines}}
+        )
+
+    if request.difficulty:
+        query_body["query"]["bool"]["filter"].append(
+            {"term": {"difficulty": request.difficulty.value}}
+        )
+
+    if request.max_prep_time:
+        query_body["query"]["bool"]["filter"].append(
+            {"range": {"est_prep_time_min": {"lte": request.max_prep_time}}}
+        )
+
+    if request.max_cook_time:
+        query_body["query"]["bool"]["filter"].append(
+            {"range": {"est_cook_time_min": {"lte": request.max_cook_time}}}
+        )
+
+    # Add dietary filters
+    dietary_filters = [
+        (request.is_vegan, "is_vegan"),
+        (request.is_vegetarian, "is_vegetarian"),
+        (request.is_gluten_free, "is_gluten_free"),
+        (request.is_dairy_free, "is_dairy_free"),
+        (request.is_nut_free, "is_nut_free"),
+    ]
+
+    for value, field in dietary_filters:
+        if value is not None:
+            query_body["query"]["bool"]["filter"].append({"term": {field: value}})
+
+    # Add healthiness score filters
+    if request.min_healthiness or request.max_healthiness:
+        range_filter = {}
+        if request.min_healthiness:
+            range_filter["gte"] = request.min_healthiness
+        if request.max_healthiness:
+            range_filter["lte"] = request.max_healthiness
+
+        query_body["query"]["bool"]["filter"].append(
+            {"range": {"healthiness_score": range_filter}}
+        )
+
+    return query_body
+
+
 app = FastAPI(
     title=settings.API_TITLE,
     description="Recipe search service powered by Elasticsearch",
@@ -167,96 +255,11 @@ async def bulk_load_recipes():
 async def search_recipes(request: SearchRequest):
     """Search recipes with flexible filtering options"""
 
-    # Build Elasticsearch query
-    query_body = {
-        "size": request.size,
-        "from": request.from_,
-        "query": {"bool": {"must": [], "filter": []}},
-    }
-
-    if request.include_aggregations:
-        query_body["runtime_mappings"] = {
-            "total_time_min": {
-                "type": "long",
-                "script": {
-                    "source": "emit((doc['est_prep_time_min'].size() > 0 ? doc['est_prep_time_min'].value : 0) + (doc['est_cook_time_min'].size() > 0 ? doc['est_cook_time_min'].value : 0))"
-                },
-            }
-        }
-
-        query_body["aggs"] = AGGREGATION_CONFIGS
-
-    if request.query:
-        query_body["query"]["bool"]["must"].append(
-            {
-                "multi_match": {
-                    "query": request.query,
-                    "fields": [
-                        "recipe_title^4",  # Highest boost for exact title matches
-                        "description^2",
-                        "ingredient_text",
-                        "directions_text",
-                    ],
-                    "type": "best_fields",
-                    "fuzziness": request.fuzziness
-                    or "AUTO",  # User-controlled fuzziness
-                }
-            }
-        )
-    else:
-        query_body["query"]["bool"]["must"].append({"match_all": {}})
-
-    if request.cuisines:
-        query_body["query"]["bool"]["filter"].append(
-            {"terms": {"cuisine_list": request.cuisines}}
-        )
-
-    if request.difficulty:
-        query_body["query"]["bool"]["filter"].append(
-            {"term": {"difficulty": request.difficulty.value}}
-        )
-
-    if request.max_prep_time:
-        query_body["query"]["bool"]["filter"].append(
-            {"range": {"est_prep_time_min": {"lte": request.max_prep_time}}}
-        )
-
-    if request.max_cook_time:
-        query_body["query"]["bool"]["filter"].append(
-            {"range": {"est_cook_time_min": {"lte": request.max_cook_time}}}
-        )
-
-    dietary_filters = [
-        (request.is_vegan, "is_vegan"),
-        (request.is_vegetarian, "is_vegetarian"),
-        (request.is_gluten_free, "is_gluten_free"),
-        (request.is_dairy_free, "is_dairy_free"),
-        (request.is_nut_free, "is_nut_free"),
-    ]
-
-    for value, field in dietary_filters:
-        if value is not None:
-            query_body["query"]["bool"]["filter"].append({"term": {field: value}})
-
-    if request.min_healthiness or request.max_healthiness:
-        range_filter = {}
-        if request.min_healthiness:
-            range_filter["gte"] = request.min_healthiness
-        if request.max_healthiness:
-            range_filter["lte"] = request.max_healthiness
-
-        query_body["query"]["bool"]["filter"].append(
-            {"range": {"healthiness_score": range_filter}}
-        )
+    query_body = build_search_query(request)
 
     result = await es_client.search_recipes(query_body)
 
-    # Parse results
-    recipes = []
-    for hit in result["hits"]["hits"]:
-        source = hit["_source"]
-        recipe = Recipe(**source)
-        recipes.append(recipe)
+    recipes = [Recipe(**hit["_source"]) for hit in result["hits"]["hits"]]
 
     aggregations = None
     if request.include_aggregations and "aggregations" in result:
