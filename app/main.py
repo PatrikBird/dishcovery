@@ -59,6 +59,48 @@ AGGREGATION_CONFIGS = {
     },
 }
 
+
+def parse_aggregations(aggs_data: dict) -> Aggregations:
+    """Parse Elasticsearch aggregation results into Pydantic models"""
+
+    def parse_bucket_agg(agg_name: str) -> Optional[List[AggregationBucket]]:
+        """Helper to parse bucket aggregations (terms, ranges)"""
+        if agg_name not in aggs_data:
+            return None
+        return [
+            AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
+            for bucket in aggs_data[agg_name]["buckets"]
+        ]
+
+    cuisines = parse_bucket_agg("cuisines")
+    difficulty_levels = parse_bucket_agg("difficulty_levels")
+    dietary_profiles = parse_bucket_agg("dietary_profiles")
+    prep_time_ranges = parse_bucket_agg("prep_time_ranges")
+    cook_time_ranges = parse_bucket_agg("cook_time_ranges")
+    total_time_ranges = parse_bucket_agg("total_time_ranges")
+
+    # Parse healthiness stats (special case)
+    healthiness_stats = None
+    if "healthiness_stats" in aggs_data:
+        stats = aggs_data["healthiness_stats"]
+        healthiness_stats = AggregationStats(
+            min=stats.get("min"),
+            max=stats.get("max"),
+            avg=round(stats.get("avg", 0), 1) if stats.get("avg") else None,
+            sum=stats.get("sum"),
+        )
+
+    return Aggregations(
+        cuisines=cuisines,
+        difficulty_levels=difficulty_levels,
+        dietary_profiles=dietary_profiles,
+        healthiness_stats=healthiness_stats,
+        prep_time_ranges=prep_time_ranges,
+        cook_time_ranges=cook_time_ranges,
+        total_time_ranges=total_time_ranges,
+    )
+
+
 app = FastAPI(
     title=settings.API_TITLE,
     description="Recipe search service powered by Elasticsearch",
@@ -218,69 +260,7 @@ async def search_recipes(request: SearchRequest):
 
     aggregations = None
     if request.include_aggregations and "aggregations" in result:
-        aggs_data = result["aggregations"]
-
-        cuisines = None
-        if "cuisines" in aggs_data:
-            cuisines = [
-                AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
-                for bucket in aggs_data["cuisines"]["buckets"]
-            ]
-
-        difficulty_levels = None
-        if "difficulty_levels" in aggs_data:
-            difficulty_levels = [
-                AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
-                for bucket in aggs_data["difficulty_levels"]["buckets"]
-            ]
-
-        dietary_profiles = None
-        if "dietary_profiles" in aggs_data:
-            dietary_profiles = [
-                AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
-                for bucket in aggs_data["dietary_profiles"]["buckets"]
-            ]
-
-        healthiness_stats = None
-        if "healthiness_stats" in aggs_data:
-            stats = aggs_data["healthiness_stats"]
-            healthiness_stats = AggregationStats(
-                min=stats.get("min"),
-                max=stats.get("max"),
-                avg=round(stats.get("avg", 0), 1) if stats.get("avg") else None,
-                sum=stats.get("sum"),
-            )
-
-        prep_time_ranges = None
-        if "prep_time_ranges" in aggs_data:
-            prep_time_ranges = [
-                AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
-                for bucket in aggs_data["prep_time_ranges"]["buckets"]
-            ]
-
-        cook_time_ranges = None
-        if "cook_time_ranges" in aggs_data:
-            cook_time_ranges = [
-                AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
-                for bucket in aggs_data["cook_time_ranges"]["buckets"]
-            ]
-
-        total_time_ranges = None
-        if "total_time_ranges" in aggs_data:
-            total_time_ranges = [
-                AggregationBucket(key=bucket["key"], doc_count=bucket["doc_count"])
-                for bucket in aggs_data["total_time_ranges"]["buckets"]
-            ]
-
-        aggregations = Aggregations(
-            cuisines=cuisines,
-            difficulty_levels=difficulty_levels,
-            dietary_profiles=dietary_profiles,
-            healthiness_stats=healthiness_stats,
-            prep_time_ranges=prep_time_ranges,
-            cook_time_ranges=cook_time_ranges,
-            total_time_ranges=total_time_ranges,
-        )
+        aggregations = parse_aggregations(result["aggregations"])
 
     return SearchResponse(
         total=result["hits"]["total"]["value"],
