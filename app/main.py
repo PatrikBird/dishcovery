@@ -11,6 +11,7 @@ from models import (
     AggregationStats,
 )
 import json
+from typing import Optional, List
 import time
 import os
 from prometheus_client import (
@@ -222,6 +223,42 @@ app = FastAPI(
     description="Recipe search service powered by Elasticsearch",
     version=settings.API_VERSION,
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Load data on startup if index is empty"""
+    try:
+        # Check if index exists and has data
+        index_exists = await es_client.index_exists()
+        if not index_exists:
+            print("Index doesn't exist, loading initial data...")
+            await load_initial_data()
+        else:
+            # Check if index has data
+            result = await es_client.search_recipes({"size": 0})
+            total_docs = result["hits"]["total"]["value"]
+            if total_docs == 0:
+                print("Index exists but is empty, loading initial data...")
+                await load_initial_data()
+            else:
+                print(f"Index already has {total_docs} documents")
+    except Exception as e:
+        print(f"Startup data loading failed: {e}")
+
+
+async def load_initial_data():
+    """Load initial recipe data"""
+    import os
+
+    recipes_file = "/app/data/recipes.json"
+    if os.path.exists(recipes_file):
+        with open(recipes_file, "r") as f:
+            recipes_data = json.load(f)
+        result = await es_client.bulk_index_recipes(recipes_data)
+        print(f"Loaded {result[0]} recipes successfully")
+    else:
+        print(f"Data file not found at {recipes_file}")
 
 
 @app.get("/")
