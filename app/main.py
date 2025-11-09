@@ -14,6 +14,51 @@ import json
 import time
 import os
 
+# Aggregation configurations
+AGGREGATION_CONFIGS = {
+    "cuisines": {"terms": {"field": "cuisine_list", "size": 20}},
+    "difficulty_levels": {"terms": {"field": "difficulty", "size": 10}},
+    "dietary_profiles": {"terms": {"field": "dietary_profile", "size": 15}},
+    "healthiness_stats": {"stats": {"field": "healthiness_score"}},
+    "prep_time_ranges": {
+        "range": {
+            "field": "est_prep_time_min",
+            "ranges": [
+                {"key": "0-15 min", "to": 15},
+                {"key": "15-30 min", "from": 15, "to": 30},
+                {"key": "30-60 min", "from": 30, "to": 60},
+                {"key": "60+ min", "from": 60},
+            ],
+        }
+    },
+    "cook_time_ranges": {
+        "range": {
+            "field": "est_cook_time_min",
+            "ranges": [
+                {"key": "0-15 min", "to": 15},
+                {"key": "15-30 min", "from": 15, "to": 30},
+                {"key": "30-45 min", "from": 30, "to": 45},
+                {"key": "45-60 min", "from": 45, "to": 60},
+                {"key": "60-90 min", "from": 60, "to": 90},
+                {"key": "90-120 min", "from": 90, "to": 120},
+                {"key": "120+ min", "from": 120},
+            ],
+        }
+    },
+    "total_time_ranges": {
+        "range": {
+            "field": "total_time_min",
+            "ranges": [
+                {"key": "0-30 min", "to": 30},
+                {"key": "30-60 min", "from": 30, "to": 60},
+                {"key": "60-90 min", "from": 60, "to": 90},
+                {"key": "90-120 min", "from": 90, "to": 120},
+                {"key": "120+ min", "from": 120},
+            ],
+        }
+    },
+}
+
 app = FastAPI(
     title=settings.API_TITLE,
     description="Recipe search service powered by Elasticsearch",
@@ -97,49 +142,7 @@ async def search_recipes(request: SearchRequest):
             }
         }
 
-        query_body["aggs"] = {
-            "cuisines": {"terms": {"field": "cuisine_list", "size": 20}},
-            "difficulty_levels": {"terms": {"field": "difficulty", "size": 10}},
-            "dietary_profiles": {"terms": {"field": "dietary_profile", "size": 15}},
-            "healthiness_stats": {"stats": {"field": "healthiness_score"}},
-            "prep_time_ranges": {
-                "range": {
-                    "field": "est_prep_time_min",
-                    "ranges": [
-                        {"key": "0-15 min", "to": 15},
-                        {"key": "15-30 min", "from": 15, "to": 30},
-                        {"key": "30-60 min", "from": 30, "to": 60},
-                        {"key": "60+ min", "from": 60},
-                    ],
-                }
-            },
-            "cook_time_ranges": {
-                "range": {
-                    "field": "est_cook_time_min",
-                    "ranges": [
-                        {"key": "0-15 min", "to": 15},
-                        {"key": "15-30 min", "from": 15, "to": 30},
-                        {"key": "30-45 min", "from": 30, "to": 45},
-                        {"key": "45-60 min", "from": 45, "to": 60},
-                        {"key": "60-90 min", "from": 60, "to": 90},
-                        {"key": "90-120 min", "from": 90, "to": 120},
-                        {"key": "120+ min", "from": 120},
-                    ],
-                }
-            },
-            "total_time_ranges": {
-                "range": {
-                    "field": "total_time_min",
-                    "ranges": [
-                        {"key": "0-30 min", "to": 30},
-                        {"key": "30-60 min", "from": 30, "to": 60},
-                        {"key": "60-90 min", "from": 60, "to": 90},
-                        {"key": "90-120 min", "from": 90, "to": 120},
-                        {"key": "120+ min", "from": 120},
-                    ],
-                }
-            },
-        }
+        query_body["aggs"] = AGGREGATION_CONFIGS
 
     if request.query:
         query_body["query"]["bool"]["must"].append(
