@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from elasticsearch_client import es_client
 from config import settings
 from models import (
@@ -13,6 +13,34 @@ from models import (
 import json
 import time
 import os
+from prometheus_client import (
+    Counter,
+    Histogram,
+    Gauge,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
+
+search_requests_total = Counter(
+    "dishcovery_search_requests_total",
+    "Total number of search requests",
+    ["status_code"],
+)
+
+search_duration_seconds = Histogram(
+    "dishcovery_search_duration_seconds", "Time spent processing search requests"
+)
+
+elasticsearch_health_status = Gauge(
+    "dishcovery_elasticsearch_health_status",
+    "Elasticsearch health status (1=green, 0.5=yellow, 0=red)",
+)
+
+bulk_operations_total = Counter(
+    "dishcovery_bulk_operations_total",
+    "Total number of bulk loading operations",
+    ["status"],
+)
 
 AGGREGATION_CONFIGS = {
     "cuisines": {"terms": {"field": "cuisine_list", "size": 20}},
@@ -206,6 +234,15 @@ async def health_check():
     es_health = await es_client.health_check()
     index_exists = await es_client.index_exists()
 
+    # Update Elasticsearch health metric
+    if "status" in es_health:
+        if es_health["status"] == "green":
+            elasticsearch_health_status.set(1)
+        elif es_health["status"] == "yellow":
+            elasticsearch_health_status.set(0.5)
+        else:  # red or error
+            elasticsearch_health_status.set(0)
+
     return {
         "status": "healthy",
         "service": "dishcovery-api",
@@ -240,6 +277,9 @@ async def bulk_load_recipes():
         loaded_count = result[0] if result else 0
         failed_count = len(result[1]) if len(result) > 1 else 0
 
+        # Record successful bulk operation
+        bulk_operations_total.labels(status="success").inc()
+
         return BulkLoadResponse(
             loaded_count=loaded_count,
             failed_count=failed_count,
@@ -248,6 +288,7 @@ async def bulk_load_recipes():
         )
 
     except Exception as e:
+        bulk_operations_total.labels(status="error").inc()
         raise HTTPException(status_code=500, detail=f"Bulk loading failed: {str(e)}")
 
 
@@ -255,19 +296,39 @@ async def bulk_load_recipes():
 async def search_recipes(request: SearchRequest):
     """Search recipes with flexible filtering options"""
 
-    query_body = build_search_query(request)
+    start_time = time.time()
+    status_code = 200
 
-    result = await es_client.search_recipes(query_body)
+    try:
+        query_body = build_search_query(request)
+        result = await es_client.search_recipes(query_body)
 
-    recipes = [Recipe(**hit["_source"]) for hit in result["hits"]["hits"]]
+        recipes = [Recipe(**hit["_source"]) for hit in result["hits"]["hits"]]
 
-    aggregations = None
-    if request.include_aggregations and "aggregations" in result:
-        aggregations = parse_aggregations(result["aggregations"])
+        aggregations = None
+        if request.include_aggregations and "aggregations" in result:
+            aggregations = parse_aggregations(result["aggregations"])
 
-    return SearchResponse(
-        total=result["hits"]["total"]["value"],
-        recipes=recipes,
-        took_ms=result["took"],
-        aggregations=aggregations,
-    )
+        response = SearchResponse(
+            total=result["hits"]["total"]["value"],
+            recipes=recipes,
+            took_ms=result["took"],
+            aggregations=aggregations,
+        )
+
+        return response
+
+    except Exception as e:
+        status_code = 500
+        raise
+    finally:
+        # Record metrics
+        duration = time.time() - start_time
+        search_duration_seconds.observe(duration)
+        search_requests_total.labels(status_code=status_code).inc()
+
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
