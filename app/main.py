@@ -43,7 +43,6 @@ async def health_check():
 async def bulk_load_recipes():
     """Load all recipes from data/recipes.json into Elasticsearch"""
 
-    # Check if recipes file exists
     recipes_file = "../data/recipes.json"
     if not os.path.exists(recipes_file):
         raise HTTPException(
@@ -54,11 +53,9 @@ async def bulk_load_recipes():
     start_time = time.time()
 
     try:
-        # Load recipes from JSON file
         with open(recipes_file, "r") as f:
             recipes_data = json.load(f)
 
-        # Bulk index to Elasticsearch
         result = await es_client.bulk_index_recipes(recipes_data)
 
         end_time = time.time()
@@ -90,9 +87,7 @@ async def search_recipes(request: SearchRequest):
         "query": {"bool": {"must": [], "filter": []}},
     }
 
-    # Add aggregations if requested
     if request.include_aggregations:
-        # Add runtime field for total time calculation
         query_body["runtime_mappings"] = {
             "total_time_min": {
                 "type": "long",
@@ -146,7 +141,6 @@ async def search_recipes(request: SearchRequest):
             },
         }
 
-    # Add text search if provided
     if request.query:
         query_body["query"]["bool"]["must"].append(
             {
@@ -167,31 +161,26 @@ async def search_recipes(request: SearchRequest):
     else:
         query_body["query"]["bool"]["must"].append({"match_all": {}})
 
-    # Add cuisine filters (can be multiple)
     if request.cuisines:
         query_body["query"]["bool"]["filter"].append(
             {"terms": {"cuisine_list": request.cuisines}}
         )
 
-    # Add difficulty filter
     if request.difficulty:
         query_body["query"]["bool"]["filter"].append(
             {"term": {"difficulty": request.difficulty.value}}
         )
 
-    # Add prep time filter
     if request.max_prep_time:
         query_body["query"]["bool"]["filter"].append(
             {"range": {"est_prep_time_min": {"lte": request.max_prep_time}}}
         )
 
-    # Add cook time filter
     if request.max_cook_time:
         query_body["query"]["bool"]["filter"].append(
             {"range": {"est_cook_time_min": {"lte": request.max_cook_time}}}
         )
 
-    # Add dietary filters
     dietary_filters = [
         (request.is_vegan, "is_vegan"),
         (request.is_vegetarian, "is_vegetarian"),
@@ -204,7 +193,6 @@ async def search_recipes(request: SearchRequest):
         if value is not None:
             query_body["query"]["bool"]["filter"].append({"term": {field: value}})
 
-    # Add healthiness score filters
     if request.min_healthiness or request.max_healthiness:
         range_filter = {}
         if request.min_healthiness:
@@ -216,7 +204,6 @@ async def search_recipes(request: SearchRequest):
             {"range": {"healthiness_score": range_filter}}
         )
 
-    # Execute search
     result = await es_client.search_recipes(query_body)
 
     # Parse results
@@ -226,12 +213,10 @@ async def search_recipes(request: SearchRequest):
         recipe = Recipe(**source)
         recipes.append(recipe)
 
-    # Parse aggregations if included
     aggregations = None
     if request.include_aggregations and "aggregations" in result:
         aggs_data = result["aggregations"]
 
-        # Parse cuisine aggregation
         cuisines = None
         if "cuisines" in aggs_data:
             cuisines = [
@@ -239,7 +224,6 @@ async def search_recipes(request: SearchRequest):
                 for bucket in aggs_data["cuisines"]["buckets"]
             ]
 
-        # Parse difficulty levels
         difficulty_levels = None
         if "difficulty_levels" in aggs_data:
             difficulty_levels = [
@@ -247,7 +231,6 @@ async def search_recipes(request: SearchRequest):
                 for bucket in aggs_data["difficulty_levels"]["buckets"]
             ]
 
-        # Parse dietary profiles
         dietary_profiles = None
         if "dietary_profiles" in aggs_data:
             dietary_profiles = [
@@ -255,7 +238,6 @@ async def search_recipes(request: SearchRequest):
                 for bucket in aggs_data["dietary_profiles"]["buckets"]
             ]
 
-        # Parse healthiness stats
         healthiness_stats = None
         if "healthiness_stats" in aggs_data:
             stats = aggs_data["healthiness_stats"]
@@ -266,7 +248,6 @@ async def search_recipes(request: SearchRequest):
                 sum=stats.get("sum"),
             )
 
-        # Parse prep time ranges
         prep_time_ranges = None
         if "prep_time_ranges" in aggs_data:
             prep_time_ranges = [
@@ -274,7 +255,6 @@ async def search_recipes(request: SearchRequest):
                 for bucket in aggs_data["prep_time_ranges"]["buckets"]
             ]
 
-        # Parse cook time ranges
         cook_time_ranges = None
         if "cook_time_ranges" in aggs_data:
             cook_time_ranges = [
@@ -282,7 +262,6 @@ async def search_recipes(request: SearchRequest):
                 for bucket in aggs_data["cook_time_ranges"]["buckets"]
             ]
 
-        # Parse total time ranges
         total_time_ranges = None
         if "total_time_ranges" in aggs_data:
             total_time_ranges = [

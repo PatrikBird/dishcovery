@@ -18,7 +18,6 @@ class CookSpeed(str, Enum):
 class SearchRequest(BaseModel):
     """Request model for recipe search - all fields are optional for maximum flexibility"""
 
-    # Text search
     query: Optional[str] = Field(
         None,
         description="Text search across recipe titles, descriptions, ingredients, and directions",
@@ -30,14 +29,12 @@ class SearchRequest(BaseModel):
         example="AUTO",
     )
 
-    # Cuisine and category filters
     cuisines: Optional[List[str]] = Field(
         None,
         description="Filter by one or more cuisine types",
         example=["italian", "asian"],
     )
 
-    # Difficulty and timing
     difficulty: Optional[DifficultyLevel] = Field(
         None, description="Recipe difficulty level"
     )
@@ -48,7 +45,6 @@ class SearchRequest(BaseModel):
         None, ge=0, description="Maximum cook time in minutes", example=60
     )
 
-    # Dietary preferences
     is_vegan: Optional[bool] = Field(None, description="Filter for vegan recipes")
     is_vegetarian: Optional[bool] = Field(
         None, description="Filter for vegetarian recipes"
@@ -61,7 +57,6 @@ class SearchRequest(BaseModel):
     )
     is_nut_free: Optional[bool] = Field(None, description="Filter for nut-free recipes")
 
-    # Health and nutrition
     min_healthiness: Optional[int] = Field(
         None, ge=0, le=100, description="Minimum healthiness score (0-100)", example=70
     )
@@ -69,7 +64,6 @@ class SearchRequest(BaseModel):
         None, ge=0, le=100, description="Maximum healthiness score (0-100)", example=90
     )
 
-    # Pagination
     size: int = Field(
         10,
         ge=0,
@@ -100,8 +94,8 @@ class Recipe(BaseModel):
     is_vegetarian: Optional[bool] = None
     is_gluten_free: Optional[bool] = None
     healthiness_score: Optional[int] = None
-    ingredients_raw: Optional[List[str]] = None  # Array of ingredient strings
-    directions_raw: Optional[List[str]] = None  # Array of direction strings
+    ingredients_raw: Optional[List[str]] = None
+    directions_raw: Optional[List[str]] = None
 
 
 class AggregationBucket(BaseModel):
