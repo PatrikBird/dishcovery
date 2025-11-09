@@ -83,5 +83,20 @@ class ElasticsearchClient:
 
         return bulk(self.client, actions)
 
+    async def create_index_with_mapping(
+        self, mapping_data: dict, index_name: str = None
+    ):
+        """Create index with proper mapping"""
+        index_name = index_name or settings.ELASTICSEARCH_INDEX
+        try:
+            result = await self._create_index(index_name, mapping_data)
+            return result
+        except Exception as e:
+            raise Exception(f"Index creation failed: {str(e)}")
+
+    @run_in_threadpool
+    def _create_index(self, index_name: str, mapping_data: dict):
+        return self.client.indices.create(index=index_name, body=mapping_data)
+
 
 es_client = ElasticsearchClient()

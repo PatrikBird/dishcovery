@@ -228,6 +228,11 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     """Load data on startup if index is empty"""
+    import asyncio
+
+    # Give ES a moment to fully initialize after health check
+    await asyncio.sleep(5)
+
     try:
         # Check if index exists and has data
         index_exists = await es_client.index_exists()
@@ -248,9 +253,20 @@ async def startup_event():
 
 
 async def load_initial_data():
-    """Load initial recipe data"""
+    """Load initial recipe data with proper index mapping"""
     import os
 
+    # First, create index with proper mapping
+    mapping_file = "/app/k8s/elasticsearch/index-mapping.json"
+    if os.path.exists(mapping_file):
+        with open(mapping_file, "r") as f:
+            mapping_data = json.load(f)
+        await es_client.create_index_with_mapping(mapping_data)
+        print("Index created with proper mapping")
+    else:
+        print(f"Mapping file not found at {mapping_file}")
+
+    # Then load data
     recipes_file = "/app/data/recipes.json"
     if os.path.exists(recipes_file):
         with open(recipes_file, "r") as f:

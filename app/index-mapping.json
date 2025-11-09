@@ -1,0 +1,144 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "analysis": {
+      "analyzer": {
+        "recipe_analyzer": {
+          "type": "standard",
+          "stopwords": "_english_"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "recipe_title": {
+        "type": "text",
+        "analyzer": "recipe_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "subcategory": {
+        "type": "keyword"
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "recipe_analyzer"
+      },
+      "ingredients": {
+        "type": "text",
+        "analyzer": "recipe_analyzer"
+      },
+      "directions": {
+        "type": "text",
+        "analyzer": "recipe_analyzer"
+      },
+      "num_ingredients": {
+        "type": "integer"
+      },
+      "num_steps": {
+        "type": "integer"
+      },
+      "ingredient_text": {
+        "type": "text",
+        "analyzer": "recipe_analyzer"
+      },
+      "directions_text": {
+        "type": "text",
+        "analyzer": "recipe_analyzer"
+      },
+      "combined_text": {
+        "type": "text",
+        "analyzer": "recipe_analyzer"
+      },
+      "ingredients_raw": {
+        "type": "keyword"
+      },
+      "directions_raw": {
+        "type": "keyword"
+      },
+      "ingredients_canonical": {
+        "type": "keyword"
+      },
+      "cuisine_list": {
+        "type": "keyword"
+      },
+      "course_list": {
+        "type": "keyword"
+      },
+      "tastes": {
+        "type": "keyword"
+      },
+      "primary_taste": {
+        "type": "keyword"
+      },
+      "secondary_taste": {
+        "type": "keyword"
+      },
+      "fast_hits": {
+        "type": "integer"
+      },
+      "slow_hits": {
+        "type": "integer"
+      },
+      "medium_hits": {
+        "type": "integer"
+      },
+      "cook_speed": {
+        "type": "keyword"
+      },
+      "est_prep_time_min": {
+        "type": "integer"
+      },
+      "est_cook_time_min": {
+        "type": "integer"
+      },
+      "difficulty": {
+        "type": "keyword"
+      },
+      "is_vegan": {
+        "type": "boolean"
+      },
+      "is_vegetarian": {
+        "type": "boolean"
+      },
+      "is_halal": {
+        "type": "boolean"
+      },
+      "is_kosher": {
+        "type": "boolean"
+      },
+      "is_nut_free": {
+        "type": "boolean"
+      },
+      "is_dairy_free": {
+        "type": "boolean"
+      },
+      "is_gluten_free": {
+        "type": "boolean"
+      },
+      "dietary_profile": {
+        "type": "keyword"
+      },
+      "healthiness_score": {
+        "type": "integer"
+      },
+      "health_flags": {
+        "type": "keyword"
+      },
+      "main_ingredient": {
+        "type": "keyword"
+      },
+      "health_level": {
+        "type": "keyword"
+      }
+    }
+  }
+}
