@@ -13,35 +13,28 @@ A blazing-fast recipe search service built with **FastAPI**, **Elasticsearch**, 
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- Minikube
-- UV package manager
+- [Python 3.11+](https://www.python.org/downloads/)
+- [UV package manager](https://github.com/astral-sh/uv)
+- [Docker Compose](https://github.com/docker/compose)
 
-### 1. Start Minikube & Deploy Elasticsearch
+### 1. Start App with Docker Compose
 ```bash
-minikube start
-kubectl apply -f k8s/elasticsearch/
-kubectl port-forward elasticsearch-0 9200:9200
+docker-compose up --build -d
 ```
 
-### 2. Start FastAPI Application
-```bash
-cd app
-uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+Data will be automatically loaded from [recipes.json](data/recipes.json) into Elasticsearch on first run.
 
-### 3. Load Recipe Data
-```bash
-curl -X POST "localhost:8000/bulk-load"
-```
-
-### 4. Search Recipes
+### 2. Search Recipes
 ```bash
 # Basic search
-curl "localhost:8000/search?q=pasta&size=5"
+curl -X POST localhost:8000/search \
+    -H "Content-Type: application/json" \
+    -d '{"query": "pasta", "size": 5}'
 
 # Filtered search  
-curl "localhost:8000/search?cuisine=korean&is_vegan=true&max_prep_time=30"
+curl -X POST localhost:8000/search \
+    -H "Content-Type: application/json" \
+    -d '{"query": "", "cuisines": ["korean"], "is_vegan": true, "max_prep_time": 30}'
 ```
 
 ## API Endpoints
@@ -50,7 +43,7 @@ curl "localhost:8000/search?cuisine=korean&is_vegan=true&max_prep_time=30"
 |----------|--------|-------------|
 | `/` | GET | Welcome message |
 | `/health` | GET | Health check (API + Elasticsearch status) |
-| `/search` | GET | Search recipes with query parameters |
+| `/search` | POST | Search recipes with query parameters |
 | `/bulk-load` | POST | Load all recipes into Elasticsearch |
 | `/docs` | GET | Interactive API documentation |
 
@@ -58,50 +51,73 @@ curl "localhost:8000/search?cuisine=korean&is_vegan=true&max_prep_time=30"
 
 ### Basic Text Search
 ```bash
-curl "localhost:8000/search?q=chocolate&size=3"
+curl -X POST localhost:8000/search \
+    -H "Content-Type: application/json" \
+    -d '{"query": "chocolate", "size": 3}'
 ```
 
 ### Cuisine & Dietary Filters
 ```bash
-curl "localhost:8000/search?cuisine=italian&is_vegan=true&size=5"
+curl -X POST localhost:8000/search \
+    -H "Content-Type: application/json" \
+    -d '{"query": "", "cuisines": ["italian"], "is_vegan": true, "size": 5}'
 ```
 
 ### Time-based Filtering
 ```bash
-curl "localhost:8000/search?q=breakfast&max_prep_time=15&size=10"
+curl -X POST localhost:8000/search \
+    -H "Content-Type: application/json" \
+    -d '{"query": "breakfast", "max_prep_time": 15, "size": 10}'
 ```
 
 ### Complex Search
 ```bash
-curl "localhost:8000/search?q=healthy+chicken&cuisine=asian&max_prep_time=30&size=5"
+curl -X POST localhost:8000/search \
+    -H "Content-Type: application/json" \
+    -d '{"query": "healthy chicken", "cuisines": ["asian"], "max_prep_time": 30, "size": 5}'
 ```
 
 ## Response Format
 
 ```json
 {
-  "total": 3033,
-  "recipes": [
-    {
-      "recipe_title": "Quick Vegan Pasta",
-      "description": "Simple 15-minute vegan pasta dish",
-      "cuisine_list": ["Italian"],
-      "est_prep_time_min": 5,
-      "est_cook_time_min": 10,
-      "is_vegan": true,
-      "healthiness_score": 75,
-      "ingredients_raw": ["1 cup pasta", "2 tbsp olive oil"],
-      "directions_raw": ["Boil pasta", "Add olive oil"]
-    }
-  ],
-  "took_ms": 17
-}
-```
+"total": 3662,
+"recipes": [
+  {
+    "recipe_title": "Air Fryer Potato Slices with Dipping Sauce",
+    "description": "These air fryer potato slices, served with a beer ketchup dipping sauce [...]",
+    "cuisine_list": [
+        "american",
+        "american_region",
+        "asian",
+        "..."
+    ],
+    "difficulty": "hard",
+    "est_prep_time_min": 23,
+    "est_cook_time_min": 74,
+    "is_vegan": true,
+    "is_vegetarian": true,
+    "is_gluten_free": true,
+    "healthiness_score": 80,
+    "ingredients_raw": [
+        "3/4 cup ketchup",
+        "1/2 cup beer",
+        "..."
+    ],
+    "directions_raw": [
+        "Combine ketchup, beer [...]"
+    ]
+  }
+],
+"took_ms": 20,
+"aggregations": null
+}```
 
 ## Roadmap
 
-- [ ] Advanced POST search endpoint with JSON body
-- [ ] Prometheus metrics collection
+- [x] Advanced POST search endpoint with JSON body
+- [x] Prometheus metrics collection
 - [ ] Grafana dashboards
+- [ ] Frontend
 - [ ] Recipe recommendation engine
 - [ ] Elasticsearch cluster scaling

@@ -84,6 +84,14 @@ A blazing-fast recipe search service built with **FastAPI**, **Elasticsearch**, 
 - **Rationale**: Simpler than Kubernetes for dev workflow
 - **Benefit**: Single command startup, proper service networking
 
+### URL State Management
+- **Decision**: POST-only search API with frontend URL synchronization
+- **Rationale**: Complex search parameters (aggregations, nested filters) exceed URL length limits and become unwieldy in query strings
+- **Trade-offs**: 
+  - ✅ Clean API design, supports complex features, future-proof
+  - ❌ Not RESTful, requires frontend URL management for bookmarking
+- **Implementation**: Vue frontend handles URL encoding/decoding while API remains simple POST endpoint
+
 ## 📊 Technical Specifications
 
 ### Data Scale
@@ -115,7 +123,7 @@ A blazing-fast recipe search service built with **FastAPI**, **Elasticsearch**, 
   - Performance timing logs
   - Error context and tracing
 
-### 🤖 Phase 7: Recommendation Engine (PLANNED)
+### 🤖 Phase 7: Recommendation Engine (MAYBE)
 - [ ] **Machine Learning Integration** - Smart recommendations
   - Recipe similarity based on ingredients
   - User preference learning
