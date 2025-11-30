@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --color-carbon-50: #edf5ff;
+  --color-carbon-100: #d0e2ff;
+  --color-carbon-200: #a6c8ff;
+  --color-carbon-300: #78a9ff;
+  --color-carbon-400: #4589ff;
+  --color-carbon-500: #0f62fe;
+  --color-carbon-600: #0043ce;
+  --color-carbon-700: #002d9c;
+  --color-carbon-800: #001d6c;
+  --color-carbon-900: #001141;
+  --color-carbon-950: #000817;
+
+  --color-coolgray-50: #f2f4f8;
+  --color-coolgray-100: #dde1e6;
+  --color-coolgray-200: #c1c7cd;
+  --color-coolgray-300: #a2a9b0;
+  --color-coolgray-400: #878d96;
+  --color-coolgray-500: #697077;
+  --color-coolgray-600: #4d5358;
+  --color-coolgray-700: #343a3f;
+  --color-coolgray-800: #21272a;
+  --color-coolgray-900: #121619;
+  --color-coolgray-950: #0b0d0f;
+}
+
+:root {
+  --ui-radius: 0;
+}
+
+*:focus-visible {
+  outline: 2px solid #0f62fe;
+  outline-offset: 2px;
+}
