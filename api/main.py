@@ -257,7 +257,7 @@ async def load_initial_data():
     import os
 
     # First, create index with proper mapping
-    mapping_file = "/app/k8s/elasticsearch/index-mapping.json"
+    mapping_file = "/api/k8s/elasticsearch/index-mapping.json"
     if os.path.exists(mapping_file):
         with open(mapping_file, "r") as f:
             mapping_data = json.load(f)
@@ -267,7 +267,7 @@ async def load_initial_data():
         print(f"Mapping file not found at {mapping_file}")
 
     # Then load data
-    recipes_file = "/app/data/recipes.json"
+    recipes_file = "/api/data/recipes.json"
     if os.path.exists(recipes_file):
         with open(recipes_file, "r") as f:
             recipes_data = json.load(f)

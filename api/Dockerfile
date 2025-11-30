@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-WORKDIR /app
+WORKDIR /api
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -20,8 +20,8 @@ RUN uv sync --frozen
 COPY . .
 
 # Create directory and copy mapping file
-RUN mkdir -p /app/k8s/elasticsearch/
-COPY index-mapping.json /app/k8s/elasticsearch/
+RUN mkdir -p /api/k8s/elasticsearch/
+COPY index-mapping.json /api/k8s/elasticsearch/
 
 # Expose port
 EXPOSE 8000
