@@ -152,6 +152,8 @@ docker-compose up -d --build
 - API: http://localhost:8000 (with auto-generated docs at /docs)
 - Prometheus: http://localhost:9090
 - Elasticsearch: http://localhost:9200
+- Grafana: http://localhost:3000
+- Nuxt Frontend: http://localhost:3001
 
 # Sample search
 curl -X POST localhost:8000/search \
