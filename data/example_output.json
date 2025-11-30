@@ -1,0 +1,241 @@
+{
+    "total": 6037,
+    "recipes": [
+        {
+            "recipe_title": "Healthy Quiche",
+            "description": "This quiche only takes about 15 minutes to prepare and is great to have in the fridge for an easy and tasty, low-calorie breakfast!",
+            "cuisine_list": [
+                "asian",
+                "korean"
+            ],
+            "difficulty": "medium",
+            "est_prep_time_min": 23,
+            "est_cook_time_min": 52,
+            "is_vegan": false,
+            "is_vegetarian": true,
+            "is_gluten_free": true,
+            "healthiness_score": 86,
+            "ingredients_raw": [
+                "cooking spray",
+                "¾ cup chopped onion",
+                "½ cup chopped zucchini",
+                "¾ cup chopped cauliflower",
+                "2 tablespoons water",
+                "10 large egg whites",
+                "¼ teaspoon garlic powder",
+                "¼ teaspoon cayenne pepper",
+                "¼ teaspoon salt",
+                "¼ teaspoon freshly ground black pepper",
+                "¼ cup shredded pepperjack cheese"
+            ],
+            "directions_raw": [
+                "Preheat oven to 350 degrees F (175 degrees C).",
+                "Coat a skillet with cooking spray and place over medium heat; cook and stir onion and zucchini until tender, 5 to 10 minutes.",
+                "Place cauliflower in a microwave-safe bowl and add water; cook in microwave until cauliflower is tender, about 3 minutes. Drain water.",
+                "Whisk egg whites, garlic powder, cayenne pepper, salt, and pepper together in a bowl; add zucchini-onion mixture, cauliflower, and pepperjack cheese. Pour egg mixture into a 10-inch round pan.",
+                "Bake in the preheated oven until quiche is set in the middle, about 25 minutes."
+            ]
+        }
+    ],
+    "took_ms": 54,
+    "aggregations": {
+        "cuisines": [
+            {
+                "key": "asian",
+                "doc_count": 6037
+            },
+            {
+                "key": "korean",
+                "doc_count": 4730
+            },
+            {
+                "key": "european",
+                "doc_count": 4573
+            },
+            {
+                "key": "middle eastern region",
+                "doc_count": 3248
+            },
+            {
+                "key": "mediterranean",
+                "doc_count": 2810
+            },
+            {
+                "key": "greek",
+                "doc_count": 2563
+            },
+            {
+                "key": "french",
+                "doc_count": 2491
+            },
+            {
+                "key": "filipino",
+                "doc_count": 1728
+            },
+            {
+                "key": "italian",
+                "doc_count": 1619
+            },
+            {
+                "key": "american_region",
+                "doc_count": 1481
+            },
+            {
+                "key": "chinese",
+                "doc_count": 1412
+            },
+            {
+                "key": "thai",
+                "doc_count": 1318
+            },
+            {
+                "key": "japanese",
+                "doc_count": 1169
+            },
+            {
+                "key": "vietnamese",
+                "doc_count": 1025
+            },
+            {
+                "key": "turkish",
+                "doc_count": 937
+            },
+            {
+                "key": "caribbean",
+                "doc_count": 739
+            },
+            {
+                "key": "american",
+                "doc_count": 661
+            },
+            {
+                "key": "indian",
+                "doc_count": 465
+            },
+            {
+                "key": "african",
+                "doc_count": 409
+            },
+            {
+                "key": "german",
+                "doc_count": 404
+            }
+        ],
+        "difficulty_levels": [
+            {
+                "key": "medium",
+                "doc_count": 3393
+            },
+            {
+                "key": "hard",
+                "doc_count": 2409
+            },
+            {
+                "key": "easy",
+                "doc_count": 235
+            }
+        ],
+        "dietary_profiles": [
+            {
+                "key": "nut_free",
+                "doc_count": 5604
+            },
+            {
+                "key": "kosher",
+                "doc_count": 5097
+            },
+            {
+                "key": "halal",
+                "doc_count": 4752
+            },
+            {
+                "key": "gluten_free",
+                "doc_count": 4558
+            },
+            {
+                "key": "vegan",
+                "doc_count": 704
+            },
+            {
+                "key": "unspecified",
+                "doc_count": 9
+            }
+        ],
+        "healthiness_stats": {
+            "min": 34.0,
+            "max": 100.0,
+            "avg": 73.2,
+            "sum": 442022.0
+        },
+        "prep_time_ranges": [
+            {
+                "key": "0-15 min",
+                "doc_count": 741
+            },
+            {
+                "key": "15-30 min",
+                "doc_count": 4973
+            },
+            {
+                "key": "30-60 min",
+                "doc_count": 323
+            },
+            {
+                "key": "60+ min",
+                "doc_count": 0
+            }
+        ],
+        "cook_time_ranges": [
+            {
+                "key": "0-15 min",
+                "doc_count": 284
+            },
+            {
+                "key": "15-30 min",
+                "doc_count": 666
+            },
+            {
+                "key": "30-45 min",
+                "doc_count": 1276
+            },
+            {
+                "key": "45-60 min",
+                "doc_count": 1315
+            },
+            {
+                "key": "60-90 min",
+                "doc_count": 1856
+            },
+            {
+                "key": "90-120 min",
+                "doc_count": 477
+            },
+            {
+                "key": "120+ min",
+                "doc_count": 163
+            }
+        ],
+        "total_time_ranges": [
+            {
+                "key": "0-30 min",
+                "doc_count": 283
+            },
+            {
+                "key": "30-60 min",
+                "doc_count": 1467
+            },
+            {
+                "key": "60-90 min",
+                "doc_count": 2352
+            },
+            {
+                "key": "90-120 min",
+                "doc_count": 1423
+            },
+            {
+                "key": "120+ min",
+                "doc_count": 512
+            }
+        ]
+    }
+}

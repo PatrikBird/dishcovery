@@ -7,15 +7,9 @@ A blazing-fast recipe search service built with **FastAPI**, **Elasticsearch**, 
 - **Lightning-fast search** across 62,000+ recipes (10-50ms response times)
 - **Multi-field search** across titles, descriptions, ingredients, and directions
 - **Advanced filtering** by cuisine, dietary preferences, prep time, and healthiness score
-- **Production-ready** with Kubernetes deployment and health checks
 - **Auto-generated API docs** at `/docs`
 
 ## Quick Start
-
-### Prerequisites
-- [Python 3.11+](https://www.python.org/downloads/)
-- [UV package manager](https://github.com/astral-sh/uv)
-- [Docker Compose](https://github.com/docker/compose)
 
 ### 1. Start App with Docker Compose
 ```bash
@@ -31,7 +25,7 @@ curl -X POST localhost:8000/search \
     -H "Content-Type: application/json" \
     -d '{"query": "pasta", "size": 5}'
 
-# Filtered search  
+# Filtered search
 curl -X POST localhost:8000/search \
     -H "Content-Type: application/json" \
     -d '{"query": "", "cuisines": ["korean"], "is_vegan": true, "max_prep_time": 30}'
@@ -79,39 +73,7 @@ curl -X POST localhost:8000/search \
 
 ## Response Format
 
-```json
-{
-"total": 3662,
-"recipes": [
-  {
-    "recipe_title": "Air Fryer Potato Slices with Dipping Sauce",
-    "description": "These air fryer potato slices, served with a beer ketchup dipping sauce [...]",
-    "cuisine_list": [
-        "american",
-        "american_region",
-        "asian",
-        "..."
-    ],
-    "difficulty": "hard",
-    "est_prep_time_min": 23,
-    "est_cook_time_min": 74,
-    "is_vegan": true,
-    "is_vegetarian": true,
-    "is_gluten_free": true,
-    "healthiness_score": 80,
-    "ingredients_raw": [
-        "3/4 cup ketchup",
-        "1/2 cup beer",
-        "..."
-    ],
-    "directions_raw": [
-        "Combine ketchup, beer [...]"
-    ]
-  }
-],
-"took_ms": 20,
-"aggregations": null
-}```
+See [example_output.json](data/example_output.json) for a sample search response.
 
 ## Roadmap
 
@@ -119,5 +81,5 @@ curl -X POST localhost:8000/search \
 - [x] Prometheus metrics collection
 - [ ] Grafana dashboards
 - [ ] Frontend
-- [ ] Recipe recommendation engine
-- [ ] Elasticsearch cluster scaling
+- [?] Recipe recommendation engine
+- [?] Elasticsearch cluster scaling
