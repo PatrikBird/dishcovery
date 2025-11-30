@@ -46,7 +46,7 @@ services:
   grafana:
     image: grafana/grafana:10.2.0
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
@@ -55,17 +55,17 @@ services:
     depends_on:
       - prometheus
 
-  dishcovery-ui:
-    build: ./ui
-    ports:
-      - "3001:3000"
-    volumes:
-      - ./ui:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - dishcovery-api
+  # dishcovery-ui:
+  #   build: ./ui
+  #   ports:
+  #     - "3001:3000"
+  #   volumes:
+  #     - ./ui:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - NODE_ENV=development
+  #   depends_on:
+  #     - dishcovery-api
 
 volumes:
   es_data:
