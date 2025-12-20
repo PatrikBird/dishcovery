@@ -1,4 +1,6 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from elasticsearch_client import es_client
 from config import settings
 from models import (
@@ -224,6 +226,10 @@ app = FastAPI(
     version=settings.API_VERSION,
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -257,7 +263,7 @@ async def load_initial_data():
     import os
 
     # First, create index with proper mapping
-    mapping_file = "/api/k8s/elasticsearch/index-mapping.json"
+    mapping_file = "index-mapping.json"
     if os.path.exists(mapping_file):
         with open(mapping_file, "r") as f:
             mapping_data = json.load(f)
@@ -267,7 +273,7 @@ async def load_initial_data():
         print(f"Mapping file not found at {mapping_file}")
 
     # Then load data
-    recipes_file = "/api/data/recipes.json"
+    recipes_file = "../data/recipes.json"
     if os.path.exists(recipes_file):
         with open(recipes_file, "r") as f:
             recipes_data = json.load(f)
@@ -278,8 +284,11 @@ async def load_initial_data():
 
 
 @app.get("/")
-async def root():
-    return {"message": "Welcome to Dishcovery Recipe Search API"}
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "version": settings.API_VERSION
+    })
 
 
 @app.get("/health")

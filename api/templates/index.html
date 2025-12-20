@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dishcovery - Recipe Search</title>
+    <script src="/static/htmx.min.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Dishcovery</h1>
+        <p>Recipe search service powered by Elasticsearch</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Welcome to Dishcovery</h2>
+            <p>This is a basic template served with Jinja2 and enhanced with HTMX.</p>
+            <p>API Version: {{ version }}</p>
+            <p>HTMX is loaded and ready for dynamic interactions.</p>
+        </section>
+
+        <section>
+            <h3>API Endpoints</h3>
+            <ul>
+                <li><a href="/health">Health Check</a></li>
+                <li><a href="/metrics">Metrics</a></li>
+                <li>POST /search - Recipe Search</li>
+                <li>POST /bulk-load - Bulk Load Recipes</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Ready for HTMX-powered dynamic interactions!</p>
+    </footer>
+</body>
+
+</html>

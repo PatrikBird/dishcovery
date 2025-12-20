@@ -16,19 +16,6 @@ services:
       retries: 10
       start_period: 30s
 
-  dishcovery-api:
-    build: ./api
-    ports:
-      - "8000:8000"
-    environment:
-      - ELASTICSEARCH_HOST=elasticsearch
-      - ELASTICSEARCH_PORT=9200
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    volumes:
-      - ./data:/api/data
-
   prometheus:
     image: prom/prometheus:v2.47.0
     ports:
@@ -40,8 +27,6 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
       - '--storage.tsdb.retention.time=200h'
-    depends_on:
-      - dishcovery-api
 
   grafana:
     image: grafana/grafana:10.2.0

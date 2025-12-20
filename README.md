@@ -11,14 +11,24 @@ A blazing-fast recipe search service built with **FastAPI**, **Elasticsearch**, 
 
 ## Quick Start
 
-### 1. Start App with Docker Compose
+### 1. Start Infrastructure Services
 ```bash
-docker-compose up --build -d
+docker-compose up -d
+```
+
+### 2. Run FastAPI Locally (Development)
+```bash
+cd api
+pip install uv
+uv sync
+uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Data will be automatically loaded from [recipes.json](data/recipes.json) into Elasticsearch on first run.
 
-### 2. Search Recipes
+> **Note**: For development, FastAPI runs locally while Elasticsearch runs in Docker for optimal development experience.
+
+### 3. Search Recipes
 ```bash
 # Basic search
 curl -X POST localhost:8000/search \
@@ -35,7 +45,7 @@ curl -X POST localhost:8000/search \
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/` | GET | Welcome message |
+| `/` | GET | HTML welcome page (Jinja2 + HTMX) |
 | `/health` | GET | Health check (API + Elasticsearch status) |
 | `/search` | POST | Search recipes with query parameters |
 | `/bulk-load` | POST | Load all recipes into Elasticsearch |
