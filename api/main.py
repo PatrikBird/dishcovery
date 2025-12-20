@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException, Response, Request
+from fastapi import FastAPI, HTTPException, Response, Request, Form
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from elasticsearch_client import es_client
 from config import settings
 from models import (
-    SearchResponse,
     Recipe,
     BulkLoadResponse,
     SearchRequest,
@@ -354,35 +354,52 @@ async def bulk_load_recipes():
         raise HTTPException(status_code=500, detail=f"Bulk loading failed: {str(e)}")
 
 
-@app.post("/search", response_model=SearchResponse)
-async def search_recipes(request: SearchRequest):
-    """Search recipes with flexible filtering options"""
+@app.post("/search", response_class=HTMLResponse)
+async def search_recipes(
+    request: Request,
+    query: str = Form(""),
+    size: int = Form(10),
+    from_: int = Form(0, alias="from"),
+):
+    """Search recipes with form data from HTMX"""
 
     start_time = time.time()
     status_code = 200
 
     try:
-        query_body = build_search_query(request)
+        # Build SearchRequest object from form data
+        search_request = SearchRequest(
+            query=query.strip() if query else "",
+            size=min(size, 50),  # Limit max size for performance
+            from_=max(from_, 0),  # Ensure non-negative offset
+            include_aggregations=False,  # Keep it simple for now
+        )
+        
+        query_body = build_search_query(search_request)
         result = await es_client.search_recipes(query_body)
 
         recipes = [Recipe(**hit["_source"]) for hit in result["hits"]["hits"]]
 
+        # For basic search, don't include aggregations to keep response fast
         aggregations = None
-        if request.include_aggregations and "aggregations" in result:
-            aggregations = parse_aggregations(result["aggregations"])
 
-        response = SearchResponse(
-            total=result["hits"]["total"]["value"],
-            recipes=recipes,
-            took_ms=result["took"],
-            aggregations=aggregations,
-        )
-
-        return response
+        return templates.TemplateResponse("search_results.html", {
+            "request": request,
+            "total": result["hits"]["total"]["value"],
+            "recipes": recipes,
+            "took_ms": result["took"],
+            "aggregations": aggregations,
+            "query": search_request.query,  # Pass back the query for display
+        })
 
     except Exception as e:
         status_code = 500
-        raise
+        # Return error as HTML fragment for HTMX
+        return f"""
+        <div class="error-message" style="color: red; padding: 10px; border: 1px solid red; border-radius: 5px; margin: 10px 0;">
+            <strong>Search Error:</strong> {str(e)}
+        </div>
+        """
     finally:
         # Record metrics
         duration = time.time() - start_time

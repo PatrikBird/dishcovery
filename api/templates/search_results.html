@@ -1,0 +1,163 @@
+<!-- Search Results Fragment for HTMX -->
+{% if total > 0 %}
+<div class="search-summary">
+    <h3>Search Results</h3>
+    <p>Found <strong>{{ total }}</strong> recipes{% if query %} for "{{ query }}"{% endif %} in {{ took_ms }}ms</p>
+</div>
+
+<div class="results">
+    {% for recipe in recipes %}
+    <article class="recipe">
+        <h4>{{ recipe.recipe_title }}</h4>
+        {% if recipe.description %}
+            <p class="description">{{ recipe.description[:200] }}{% if recipe.description|length > 200 %}...{% endif %}</p>
+        {% endif %}
+        
+        <div class="recipe-meta">
+            {% if recipe.cuisine_list %}
+                <span class="cuisines">{{ recipe.cuisine_list | join(', ') }}</span>
+            {% endif %}
+            {% if recipe.difficulty %}
+                <span class="difficulty">{{ recipe.difficulty }}</span>
+            {% endif %}
+            {% if recipe.est_prep_time_min %}
+                <span class="prep-time">{{ recipe.est_prep_time_min }}min prep</span>
+            {% endif %}
+            {% if recipe.est_cook_time_min %}
+                <span class="cook-time">{{ recipe.est_cook_time_min }}min cook</span>
+            {% endif %}
+            {% if recipe.healthiness_score %}
+                <span class="healthiness">{{ recipe.healthiness_score }}/100 health</span>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>
+
+{% elif query %}
+<div class="no-results">
+    <h3>No Results Found</h3>
+    <p>No recipes found for "{{ query }}". Try:</p>
+    <ul>
+        <li>Using different keywords (e.g., "pasta" instead of "spaghetti")</li>
+        <li>Checking your spelling</li>
+        <li>Using broader terms (e.g., "chicken" instead of "chicken parmesan")</li>
+    </ul>
+</div>
+
+{% else %}
+<div class="default-state">
+    <h3>Start Searching</h3>
+    <p>Type in the search box above to find recipes. Try searching for:</p>
+    <ul class="search-suggestions">
+        <li><strong>Ingredients:</strong> "chocolate", "chicken", "pasta"</li>
+        <li><strong>Cuisine:</strong> "italian", "asian", "mexican"</li>
+        <li><strong>Dishes:</strong> "pizza", "soup", "salad"</li>
+    </ul>
+</div>
+{% endif %}
+
+<style>
+.search-summary {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f0f8ff;
+    border-left: 4px solid #4CAF50;
+    border-radius: 4px;
+}
+.search-summary h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+.search-summary p {
+    margin: 0;
+    color: #666;
+}
+.results {
+    margin-top: 20px;
+}
+.recipe {
+    border: 1px solid #ddd;
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 8px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.recipe h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.2em;
+}
+.description {
+    font-style: italic;
+    color: #666;
+    margin: 10px 0;
+    line-height: 1.4;
+}
+.recipe-meta {
+    margin: 15px 0;
+}
+.recipe-meta span {
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 5px;
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: #555;
+}
+.recipe-meta .cuisines { background: #e8f5e8; }
+.recipe-meta .difficulty { background: #fff2e8; }
+.recipe-meta .prep-time { background: #e8f0ff; }
+.recipe-meta .cook-time { background: #ffe8f0; }
+.recipe-meta .healthiness { background: #f0e8ff; }
+
+.no-results {
+    text-align: center;
+    margin: 40px 0;
+    padding: 30px;
+    background: #fff9e6;
+    border: 1px solid #ffd700;
+    border-radius: 8px;
+}
+.no-results h3 {
+    color: #cc8800;
+    margin-bottom: 15px;
+}
+.no-results ul {
+    text-align: left;
+    display: inline-block;
+    margin: 15px 0;
+}
+.no-results li {
+    margin: 5px 0;
+    color: #666;
+}
+
+.default-state {
+    text-align: center;
+    margin: 40px 0;
+    padding: 30px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+.default-state h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+.search-suggestions {
+    text-align: left;
+    display: inline-block;
+    margin: 15px 0;
+}
+.search-suggestions li {
+    margin: 8px 0;
+    color: #666;
+}
+.search-suggestions strong {
+    color: #4CAF50;
+}
+</style>
