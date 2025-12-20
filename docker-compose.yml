@@ -55,18 +55,6 @@ services:
     depends_on:
       - prometheus
 
-  # dishcovery-ui:
-  #   build: ./ui
-  #   ports:
-  #     - "3001:3000"
-  #   volumes:
-  #     - ./ui:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - NODE_ENV=development
-  #   depends_on:
-  #     - dishcovery-api
-
 volumes:
   es_data:
   grafana_data:
