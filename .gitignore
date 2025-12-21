@@ -1,5 +1,6 @@
 # Don't commit the dataset
 data/recipes.json
+data/recipes_cleaned.json
 
 # Python
 __pycache__/
