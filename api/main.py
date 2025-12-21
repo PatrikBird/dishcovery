@@ -273,7 +273,7 @@ async def load_initial_data():
         print(f"Mapping file not found at {mapping_file}")
 
     # Then load data
-    recipes_file = "../data/recipes.json"
+    recipes_file = "../data/recipes_cleaned.json"
     if os.path.exists(recipes_file):
         with open(recipes_file, "r") as f:
             recipes_data = json.load(f)
@@ -316,11 +316,11 @@ async def health_check():
 async def bulk_load_recipes():
     """Load all recipes from data/recipes.json into Elasticsearch"""
 
-    recipes_file = "../data/recipes.json"
+    recipes_file = "../data/recipes_cleaned.json"
     if not os.path.exists(recipes_file):
         raise HTTPException(
             status_code=404,
-            detail="recipes.json file not found. Expected at ../data/recipes.json",
+            detail="recipes_cleaned.json file not found. Expected at ../data/recipes_cleaned.json",
         )
 
     start_time = time.time()

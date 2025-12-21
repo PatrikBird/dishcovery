@@ -1,6 +1,7 @@
 import json
 import sys
 
+
 def test_dataset(file_path):
     print(f"Testing dataset: {file_path}")
     print("-" * 60)
@@ -8,7 +9,7 @@ def test_dataset(file_path):
     try:
         # Load the dataset
         print("📂 Loading JSON file...")
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             data = json.load(f)
 
         print(f"✅ Successfully loaded!")
@@ -28,7 +29,9 @@ def test_dataset(file_path):
             print()
             print("📖 Sample Recipe:")
             print(f"   Title: {first_recipe.get('recipe_title')}")
-            print(f"   Category: {first_recipe.get('category')}")
+            print(
+                f"   Categories: {first_recipe.get('categories', first_recipe.get('category'))}"
+            )
             print(f"   Ingredients: {first_recipe.get('num_ingredients')}")
             print(f"   Steps: {first_recipe.get('num_steps')}")
             print(f"   Vegan: {first_recipe.get('is_vegan')}")
@@ -38,9 +41,17 @@ def test_dataset(file_path):
 
             # Verify key fields exist
             required_fields = [
-                'recipe_title', 'description', 'ingredients', 'directions',
-                'category', 'num_ingredients', 'num_steps', 'cuisine_list',
-                'is_vegan', 'is_vegetarian', 'difficulty', 'healthiness_score'
+                "recipe_title",
+                "description",
+                "ingredients",
+                "directions",
+                "num_ingredients",
+                "num_steps",
+                "cuisine_list",
+                "is_vegan",
+                "is_vegetarian",
+                "difficulty",
+                "healthiness_score",
             ]
 
             missing_fields = [f for f in required_fields if f not in first_recipe]
@@ -63,6 +74,7 @@ def test_dataset(file_path):
     except Exception as e:
         print(f"❌ Error: {e}")
         return False
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

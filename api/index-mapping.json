@@ -22,10 +22,10 @@
           }
         }
       },
-      "category": {
+      "categories": {
         "type": "keyword"
       },
-      "subcategory": {
+      "subcategories": {
         "type": "keyword"
       },
       "description": {
