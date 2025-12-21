@@ -285,10 +285,9 @@ async def load_initial_data():
 
 @app.get("/")
 async def root(request: Request):
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "version": settings.API_VERSION
-    })
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "version": settings.API_VERSION}
+    )
 
 
 @app.get("/health")
@@ -374,7 +373,7 @@ async def search_recipes(
             from_=max(from_, 0),  # Ensure non-negative offset
             include_aggregations=False,  # Keep it simple for now
         )
-        
+
         query_body = build_search_query(search_request)
         result = await es_client.search_recipes(query_body)
 
@@ -383,14 +382,17 @@ async def search_recipes(
         # For basic search, don't include aggregations to keep response fast
         aggregations = None
 
-        return templates.TemplateResponse("search_results.html", {
-            "request": request,
-            "total": result["hits"]["total"]["value"],
-            "recipes": recipes,
-            "took_ms": result["took"],
-            "aggregations": aggregations,
-            "query": search_request.query,  # Pass back the query for display
-        })
+        return templates.TemplateResponse(
+            "partials/search_results.html",
+            {
+                "request": request,
+                "total": result["hits"]["total"]["value"],
+                "recipes": recipes,
+                "took_ms": result["took"],
+                "aggregations": aggregations,
+                "query": search_request.query,  # Pass back the query for display
+            },
+        )
 
     except Exception as e:
         status_code = 500

@@ -11,8 +11,8 @@ Use this template for new ADRs:
 ```markdown
 ## ADR-XXX: [Title]
 
-**Date:** YYYY-MM-DD  
-**Status:** Proposed | Accepted | Deprecated | Superseded  
+**Date:** YYYY-MM-DD
+**Status:** Proposed | Accepted | Deprecated | Superseded
 **Tickets:** [related ticket IDs]
 
 ### Context
@@ -32,8 +32,8 @@ Use this template for new ADRs:
 
 ## ADR-001: Server-Side Rendering with Jinja2 + HTMX
 
-**Date:** 2025-12-21  
-**Status:** Accepted  
+**Date:** 2025-12-21
+**Status:** Accepted
 **Tickets:** dishcovery-dx1, dishcovery-cir, dishcovery-lwv
 
 ### Context
@@ -79,7 +79,7 @@ This replaces the original plan of JSON API + separate frontend.
 
 ## ADR-002: Hybrid Endpoint Strategy (Rejected)
 
-**Date:** 2025-12-21  
+**Date:** 2025-12-21
 **Status:** Rejected (superseded by ADR-001)
 
 ### Context
@@ -88,7 +88,7 @@ During planning, we considered a hybrid approach where `/search` would return JS
 
 ### Decision
 
-Rejected in favor of full HTML-only for `/search`. 
+Rejected in favor of full HTML-only for `/search`.
 
 ### Rationale
 
@@ -98,8 +98,8 @@ Since we decided on server-rendered HTML as the *only* client (ADR-001), there's
 
 ## ADR-003: Form Encoding for Search Requests
 
-**Date:** 2025-12-21  
-**Status:** Accepted  
+**Date:** 2025-12-21
+**Status:** Accepted
 **Tickets:** dishcovery-lwv
 
 ### Context
@@ -133,7 +133,7 @@ async def search_recipes(query: str = Form(None), size: int = Form(10)):
 
 ## ADR-004: Modern CSS Features (Container Queries, Layers, Scopes)
 
-**Date:** 2025-12-21  
+**Date:** 2025-12-21
 **Status:** Accepted
 
 ### Context
@@ -215,3 +215,48 @@ No CSS framework or preprocessor.
 - Use `@supports` for progressive enhancement where needed
 - Core functionality works without these features (graceful degradation)
 - Target modern evergreen browsers (last 2 versions)
+
+---
+
+## ADR-005: Template Organization with HTMX Partials
+
+**Date:** 2025-12-21
+**Status:** Accepted
+
+### Context
+
+With Jinja2 + HTMX (ADR-001), templates fall into two categories:
+
+1. **Full pages** - Complete HTML documents for initial page loads
+2. **Partials** - HTML fragments swapped by HTMX into existing DOM elements
+
+Without conventions, it's unclear which templates are pages vs fragments, and how partials relate to their swap targets.
+
+### Decision
+
+```
+api/templates/
+├── index.html             # Full page
+├── partials/              # HTMX fragments
+│   └── search_results.html
+```
+
+**Conventions:**
+
+1. **Full pages** live at the root of `templates/`
+2. **Partials** live in `templates/partials/`
+3. **Naming convention:** Partial filenames match their `hx-target` ID
+   - `hx-target="#search-results"` → `partials/search_results.html`
+   - `hx-target="#recipe-detail"` → `partials/recipe_detail.html`
+4. Partials must NOT include document-level tags (`<!DOCTYPE>`, `<html>`, `<head>`, `<body>`)
+
+### Consequences
+
+**Positive:**
+- Location signals purpose (root = page, `partials/` = fragment)
+- Naming convention creates traceable link between frontend `hx-target` and backend template
+- Easy to find which template renders a given DOM region
+
+**Negative:**
+- Requires discipline to maintain naming alignment
+- Render calls need `partials/` prefix
