@@ -40,6 +40,13 @@ bd sync               # Sync with git
 
 ## Project Information
 
+### Architecture Decisions
+
+See [ADR.md](ADR.md) for architecture decision records, including:
+- **ADR-001:** Server-Side Rendering with Jinja2 + HTMX (replacing JSON API + separate frontend)
+- **ADR-003:** Form Encoding for Search Requests
+- **ADR-004:** Modern CSS Features (Container Queries, Layers, Scopes)
+
 ### Repository Overview
 **Dishcovery** is a blazing-fast recipe search service built with FastAPI, Elasticsearch, and Kubernetes. The project contains 62,000+ recipes with 10-50ms response times.
 
@@ -145,10 +152,9 @@ dishcovery/
 - Grafana: http://localhost:3001 (admin/admin)
 
 ### Current Status
-- ✅ Advanced POST search endpoint with JSON body
 - ✅ Prometheus metrics collection
+- 🚧 Jinja2 + HTMX frontend (in progress, see ADR-001)
 - 🚧 Grafana dashboards (in progress)
-- ❌ Frontend (planned)
 - ❓ Recipe recommendation engine (under consideration)
 - ❓ Elasticsearch cluster scaling (under consideration)
 

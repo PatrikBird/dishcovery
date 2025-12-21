@@ -85,11 +85,18 @@ curl -X POST localhost:8000/search \
 
 See [example_output.json](data/example_output.json) for a sample search response.
 
+## Architecture
+
+See [ADR.md](ADR.md) for architecture decision records.
+
+**Key decisions:**
+- Server-side rendering with Jinja2 + HTMX (no separate frontend)
+- Form-encoded search requests
+
 ## Roadmap
 
-- [x] Advanced POST search endpoint with JSON body
 - [x] Prometheus metrics collection
+- [ ] Jinja2 + HTMX frontend (in progress)
 - [ ] Grafana dashboards
-- [ ] Frontend
 - [?] Recipe recommendation engine
 - [?] Elasticsearch cluster scaling
