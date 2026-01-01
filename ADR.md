@@ -260,3 +260,49 @@ api/templates/
 **Negative:**
 - Requires discipline to maintain naming alignment
 - Render calls need `partials/` prefix
+
+---
+
+## ADR-006: Carbon Design System Styling
+
+**Date:** 2026-01-01
+**Status:** Proposed
+**Tickets:** dishcovery-dpq, dishcovery-i4r, dishcovery-2e2, dishcovery-dhc, dishcovery-a5l
+
+### Context
+
+The project follows the Carbon Design System for the frontend.
+
+### Decision
+
+Adopt **Carbon Design System visual language** as **custom CSS** without external component libraries:
+
+- **Colors/Spacing**: CSS custom properties matching Carbon's token system
+- **Typography**: IBM Plex Sans via Google Fonts CDN
+- **Icons**: Iconify web component with Carbon icon set (`carbon:*`)
+- **Theme**: White theme initially; dark theme CSS variables prepared but inactive
+
+### Rationale
+
+- Carbon provides a mature, accessible, enterprise-grade aesthetic
+- Official Carbon library requires React/npm tooling, contradicting ADR-001 and ADR-004
+- Custom CSS gives us Carbon's look without build dependencies
+- Iconify provides 2400+ Carbon icons via single script include
+
+### Consequences
+
+**Positive:**
+- Professional UI without framework lock-in
+- Zero npm dependencies
+- Full CSS control; dark theme ready when needed
+
+**Negative:**
+- Must manually implement component styles
+- No automatic updates from Carbon upstream
+- Iconify requires CDN (can self-host later)
+
+### References
+
+- https://carbondesignsystem.com/
+- https://icon-sets.iconify.design/carbon/
+- https://iconify.design/docs/iconify-icon/
