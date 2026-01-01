@@ -13,10 +13,32 @@
 <body class="cds-layout">
     <!-- Fixed Header -->
     <header class="cds-header">
-        <h1>
+        <!-- Mobile Menu Button (hidden on desktop) -->
+        <button class="cds-header__menu-trigger" aria-label="Open menu">
+            <iconify-icon icon="carbon:menu"></iconify-icon>
+        </button>
+
+        <!-- App Title -->
+        <h1 class="cds-header__title">
             <iconify-icon icon="carbon:restaurant"></iconify-icon>
             Dishcovery
         </h1>
+
+        <!-- Search Bar -->
+        <div class="cds-header__search">
+            <form class="cds-search" hx-post="/search" hx-target="#search-results"
+                hx-trigger="keyup changed delay:300ms from:input[name=query]">
+                <div class="cds-search__input-wrapper">
+                    <iconify-icon icon="carbon:search" class="cds-search__icon"></iconify-icon>
+                    <input type="text" name="query" class="cds-search__input" placeholder="Search recipes..."
+                        autocomplete="off">
+                    <button type="button" class="cds-search__clear" aria-label="Clear search">
+                        <iconify-icon icon="carbon:close"></iconify-icon>
+                    </button>
+                </div>
+                <input type="hidden" name="size" value="10">
+            </form>
+        </div>
     </header>
 
     <!-- Content Area with Sidebar and Main -->
@@ -54,18 +76,8 @@
                 <p>API Version: {{ version }}</p>
             </section>
 
-            <section>
-                <h3>Search Recipes</h3>
-                <div class="cds-form-item">
-                    <form hx-post="/search" hx-target="#search-results"
-                        hx-trigger="keyup changed delay:300ms from:input[name=query]">
-                        <input type="text" name="query" class="cds-text-input"
-                            placeholder="Search recipes... (e.g., 'chocolate cake', 'vegan pasta')" autocomplete="off">
-                        <input type="hidden" name="size" value="10">
-                    </form>
-                </div>
-                <div id="search-results"></div>
-            </section>
+            <!-- Search Results Area -->
+            <div id="search-results"></div>
 
             <section>
                 <h3>API Endpoints</h3>
@@ -77,6 +89,51 @@
             </section>
         </main>
     </div>
+
+    <script>
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.querySelector('.cds-search__input');
+            const clearButton = document.querySelector('.cds-search__clear');
+            const menuTrigger = document.querySelector('.cds-header__menu-trigger');
+            const sidebar = document.querySelector('.cds-sidebar');
+            const sidebarOverlay = document.querySelector('.cds-sidebar-overlay');
+
+            // Clear button functionality
+            if (searchInput && clearButton) {
+                // Show/hide clear button based on input content
+                searchInput.addEventListener('input', function () {
+                    if (this.value.length > 0) {
+                        clearButton.style.display = 'flex';
+                    } else {
+                        clearButton.style.display = 'none';
+                    }
+                });
+
+                // Clear search when button is clicked
+                clearButton.addEventListener('click', function () {
+                    searchInput.value = '';
+                    clearButton.style.display = 'none';
+                    searchInput.focus();
+                    // Trigger HTMX to clear results
+                    searchInput.dispatchEvent(new Event('keyup'));
+                });
+            }
+
+            // Mobile menu functionality
+            if (menuTrigger && sidebar && sidebarOverlay) {
+                menuTrigger.addEventListener('click', function () {
+                    sidebar.classList.add('cds-sidebar--open');
+                    sidebarOverlay.classList.add('cds-sidebar-overlay--active');
+                });
+
+                sidebarOverlay.addEventListener('click', function () {
+                    sidebar.classList.remove('cds-sidebar--open');
+                    sidebarOverlay.classList.remove('cds-sidebar-overlay--active');
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
