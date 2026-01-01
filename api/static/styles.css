@@ -1,0 +1,303 @@
+/* Carbon Design System Foundation */
+
+/* IBM Plex Sans Font Import */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+/* CSS Reset & Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Carbon Design System Color Tokens - White Theme */
+:root {
+  /* Background tokens */
+  --cds-background: #ffffff;
+  --cds-layer-01: #f4f4f4;
+  --cds-layer-02: #ffffff;
+  --cds-layer-03: #ffffff;
+  --cds-field-01: #f4f4f4;
+  --cds-field-02: #ffffff;
+
+  /* Text tokens */
+  --cds-text-primary: #161616;
+  --cds-text-secondary: #525252;
+  --cds-text-helper: #6f6f6f;
+  --cds-text-placeholder: #a8a8a8;
+  --cds-text-on-color: #ffffff;
+  --cds-text-inverse: #ffffff;
+
+  /* Interactive tokens */
+  --cds-interactive: #0f62fe;
+  /* Blue 60 */
+  --cds-link-primary: #0f62fe;
+  --cds-link-secondary: #0043ce;
+  --cds-link-visited: #8a3ffc;
+
+  /* Border tokens */
+  --cds-border-subtle: #e0e0e0;
+  --cds-border-strong: #8d8d8d;
+  --cds-border-inverse: #393939;
+
+  /* Focus */
+  --cds-focus: #0f62fe;
+
+  /* Support tokens */
+  --cds-support-error: #da1e28;
+  --cds-support-success: #24a148;
+  --cds-support-warning: #f1c21b;
+  --cds-support-info: #0043ce;
+}
+
+/* Dark Theme Variables (Prepared but Inactive) */
+[data-theme="dark"] {
+  /* Background tokens */
+  --cds-background: #161616;
+  --cds-layer-01: #262626;
+  --cds-layer-02: #393939;
+  --cds-layer-03: #525252;
+  --cds-field-01: #262626;
+  --cds-field-02: #393939;
+
+  /* Text tokens */
+  --cds-text-primary: #f4f4f4;
+  --cds-text-secondary: #c6c6c6;
+  --cds-text-helper: #8d8d8d;
+  --cds-text-placeholder: #6f6f6f;
+  --cds-text-on-color: #ffffff;
+  --cds-text-inverse: #161616;
+
+  /* Interactive tokens */
+  --cds-interactive: #4589ff;
+  /* Blue 50 for dark */
+  --cds-link-primary: #78a9ff;
+  --cds-link-secondary: #a6c8ff;
+  --cds-link-visited: #be95ff;
+
+  /* Border tokens */
+  --cds-border-subtle: #393939;
+  --cds-border-strong: #6f6f6f;
+  --cds-border-inverse: #e0e0e0;
+}
+
+/* Carbon Spacing Scale (8px grid) */
+:root {
+  --cds-spacing-01: 0.125rem;
+  /* 2px */
+  --cds-spacing-02: 0.25rem;
+  /* 4px */
+  --cds-spacing-03: 0.5rem;
+  /* 8px */
+  --cds-spacing-04: 0.75rem;
+  /* 12px */
+  --cds-spacing-05: 1rem;
+  /* 16px */
+  --cds-spacing-06: 1.5rem;
+  /* 24px */
+  --cds-spacing-07: 2rem;
+  /* 32px */
+  --cds-spacing-08: 2.5rem;
+  /* 40px */
+  --cds-spacing-09: 3rem;
+  /* 48px */
+  --cds-spacing-10: 4rem;
+  /* 64px */
+  --cds-spacing-11: 5rem;
+  /* 80px */
+  --cds-spacing-12: 6rem;
+  /* 96px */
+}
+
+/* Typography Setup */
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--cds-text-primary);
+  background-color: var(--cds-background);
+}
+
+/* Carbon Typography Scale */
+h1 {
+  font-size: 2.625rem;
+  /* 42px */
+  font-weight: 400;
+  line-height: 1.19;
+  letter-spacing: 0;
+}
+
+h2 {
+  font-size: 2rem;
+  /* 32px */
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+h3 {
+  font-size: 1.75rem;
+  /* 28px */
+  font-weight: 400;
+  line-height: 1.29;
+  letter-spacing: 0;
+}
+
+h4 {
+  font-size: 1.5rem;
+  /* 24px */
+  font-weight: 400;
+  line-height: 1.33;
+  letter-spacing: 0;
+}
+
+/* Focus State Styles */
+*:focus {
+  outline: 2px solid var(--cds-focus);
+  outline-offset: 1px;
+}
+
+/* Layout Structure */
+.cds-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header Layout */
+.cds-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background-color: var(--cds-background);
+  border-bottom: 1px solid var(--cds-border-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--cds-spacing-05);
+  z-index: 1000;
+}
+
+.cds-header h1 {
+  font-size: 1.125rem;
+  /* 18px */
+  font-weight: 600;
+  margin: 0;
+  color: var(--cds-text-primary);
+}
+
+/* Content Layout */
+.cds-content {
+  display: flex;
+  margin-top: 48px;
+  /* Header height */
+  min-height: calc(100vh - 48px);
+}
+
+/* Sidebar Layout */
+.cds-sidebar {
+  width: 256px;
+  min-width: 256px;
+  background-color: var(--cds-layer-01);
+  border-right: 1px solid var(--cds-border-subtle);
+  padding: var(--cds-spacing-05);
+  overflow-y: auto;
+}
+
+/* Main Content Area */
+.cds-main {
+  flex: 1;
+  padding: var(--cds-spacing-05);
+  background-color: var(--cds-background);
+  overflow-y: auto;
+}
+
+/* Mobile Layout */
+@media (max-width: 768px) {
+  .cds-sidebar {
+    position: fixed;
+    top: 48px;
+    left: -256px;
+    height: calc(100vh - 48px);
+    transition: left 0.3s ease;
+    z-index: 999;
+  }
+
+  .cds-sidebar.cds-sidebar--open {
+    left: 0;
+  }
+
+  .cds-sidebar-overlay {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(22, 22, 22, 0.5);
+    z-index: 998;
+    display: none;
+  }
+
+  .cds-sidebar-overlay.cds-sidebar-overlay--active {
+    display: block;
+  }
+
+  .cds-main {
+    padding: var(--cds-spacing-04);
+  }
+}
+
+/* Basic Form Styles */
+.cds-form-item {
+  margin-bottom: var(--cds-spacing-05);
+}
+
+.cds-text-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--cds-spacing-05);
+  border: 1px solid var(--cds-border-subtle);
+  background-color: var(--cds-field-01);
+  color: var(--cds-text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cds-text-input:focus {
+  border-color: var(--cds-focus);
+  background-color: var(--cds-field-02);
+}
+
+/* Links */
+a {
+  color: var(--cds-link-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:visited {
+  color: var(--cds-link-visited);
+}
+
+/* Utility Classes */
+.cds-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -5,95 +5,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dishcovery - Recipe Search</title>
+    <link rel="stylesheet" href="/static/styles.css">
     <script src="/static/htmx.min.js"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
 
-<body>
-    <header>
-        <h1>Dishcovery</h1>
-        <p>Recipe search service powered by Elasticsearch</p>
+<body class="cds-layout">
+    <!-- Fixed Header -->
+    <header class="cds-header">
+        <h1>
+            <iconify-icon icon="carbon:restaurant"></iconify-icon>
+            Dishcovery
+        </h1>
     </header>
 
-    <main>
-        <section>
-            <h2>Welcome to Dishcovery</h2>
-            <p>Search through 62,000+ recipes powered by Elasticsearch</p>
-            <p>API Version: {{ version }}</p>
-        </section>
+    <!-- Content Area with Sidebar and Main -->
+    <div class="cds-content">
+        <!-- Left Sidebar -->
+        <aside class="cds-sidebar">
+            <section>
+                <h3>Filters</h3>
+                <p>Filter options will be implemented here</p>
+            </section>
 
-        <section>
-            <h3>Search Recipes</h3>
-            <div class="search-container">
-                <form hx-post="/search" hx-target="#search-results" hx-trigger="keyup changed delay:300ms from:input[name=query]">
-                    <input type="text" name="query" placeholder="Search recipes... (e.g., 'chocolate cake', 'vegan pasta')" autocomplete="off">
-                    <input type="hidden" name="size" value="10">
-                </form>
-            </div>
-            <div id="search-results"></div>
-        </section>
+            <section>
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/health">
+                            <iconify-icon icon="carbon:status-resolved"></iconify-icon>
+                            Health Check
+                        </a></li>
+                    <li><a href="/metrics">
+                            <iconify-icon icon="carbon:analytics"></iconify-icon>
+                            Metrics
+                        </a></li>
+                </ul>
+            </section>
+        </aside>
 
-        <section>
-            <h3>API Endpoints</h3>
-            <ul>
-                <li><a href="/health">Health Check</a></li>
-                <li><a href="/metrics">Metrics</a></li>
-                <li>POST /search - Recipe Search</li>
-                <li>POST /bulk-load - Bulk Load Recipes</li>
-            </ul>
-        </section>
-    </main>
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="cds-sidebar-overlay"></div>
 
-    <footer>
-        <p>Ready for HTMX-powered dynamic interactions!</p>
-    </footer>
+        <!-- Main Content -->
+        <main class="cds-main">
+            <section>
+                <h2>Welcome to Dishcovery</h2>
+                <p>Search through 62,000+ recipes powered by Elasticsearch</p>
+                <p>API Version: {{ version }}</p>
+            </section>
 
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 40px; 
-            background-color: #f9f9f9; 
-        }
-        .search-container {
-            margin: 20px 0;
-        }
-        .search-container input[type="text"] {
-            width: 100%;
-            max-width: 600px;
-            padding: 12px 16px;
-            font-size: 16px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-        .search-container input[type="text"]:focus {
-            border-color: #4CAF50;
-        }
-        #search-results {
-            margin-top: 20px;
-        }
-        header h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-        section {
-            margin: 30px 0;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin: 5px 0;
-        }
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+            <section>
+                <h3>Search Recipes</h3>
+                <div class="cds-form-item">
+                    <form hx-post="/search" hx-target="#search-results"
+                        hx-trigger="keyup changed delay:300ms from:input[name=query]">
+                        <input type="text" name="query" class="cds-text-input"
+                            placeholder="Search recipes... (e.g., 'chocolate cake', 'vegan pasta')" autocomplete="off">
+                        <input type="hidden" name="size" value="10">
+                    </form>
+                </div>
+                <div id="search-results"></div>
+            </section>
+
+            <section>
+                <h3>API Endpoints</h3>
+                <ul>
+                    <li>POST /search - Recipe Search</li>
+                    <li>POST /bulk-load - Bulk Load Recipes</li>
+                </ul>
+                <p>Ready for HTMX-powered dynamic interactions!</p>
+            </section>
+        </main>
+    </div>
 </body>
 
 </html>
