@@ -1,0 +1,146 @@
+<!-- Dynamic filter options based on current search aggregations -->
+
+<!-- Cuisines Filter Options -->
+<div class="cds-checkbox-group" id="cuisines-options">
+    {% if aggregations and aggregations.cuisines %}
+        {% for bucket in aggregations.cuisines %}
+        <label class="cds-checkbox {{ 'cds-checkbox--disabled' if bucket.doc_count == 0 }}">
+            <input type="checkbox" name="cuisines" value="{{ bucket.key }}" class="cds-checkbox__input" 
+                   {{ 'disabled' if bucket.doc_count == 0 }}>
+            <span class="cds-checkbox__checkmark"></span>
+            <span class="cds-checkbox__label-text">{{ bucket.key|title }}</span>
+            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+        </label>
+        {% endfor %}
+    {% else %}
+        <!-- Fallback static options -->
+        <label class="cds-checkbox">
+            <input type="checkbox" name="cuisines" value="italian" class="cds-checkbox__input">
+            <span class="cds-checkbox__checkmark"></span>
+            <span class="cds-checkbox__label-text">Italian</span>
+        </label>
+        <label class="cds-checkbox">
+            <input type="checkbox" name="cuisines" value="asian" class="cds-checkbox__input">
+            <span class="cds-checkbox__checkmark"></span>
+            <span class="cds-checkbox__label-text">Asian</span>
+        </label>
+    {% endif %}
+</div>
+
+<!-- Difficulty Filter Options -->
+<div class="cds-radio-group" id="difficulty-options">
+    <label class="cds-radio">
+        <input type="radio" name="difficulty" value="" class="cds-radio__input" checked>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">All</span>
+    </label>
+    {% if aggregations and aggregations.difficulty_levels %}
+        {% for bucket in aggregations.difficulty_levels %}
+        <label class="cds-radio {{ 'cds-radio--disabled' if bucket.doc_count == 0 }}">
+            <input type="radio" name="difficulty" value="{{ bucket.key }}" class="cds-radio__input"
+                   {{ 'disabled' if bucket.doc_count == 0 }}>
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">{{ bucket.key|title }}</span>
+            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+        </label>
+        {% endfor %}
+    {% else %}
+        <!-- Fallback static options -->
+        <label class="cds-radio">
+            <input type="radio" name="difficulty" value="easy" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">Easy</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="difficulty" value="medium" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">Medium</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="difficulty" value="hard" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">Hard</span>
+        </label>
+    {% endif %}
+</div>
+
+<!-- Prep Time Filter Options -->
+<div class="cds-radio-group" id="prep-time-options">
+    <label class="cds-radio">
+        <input type="radio" name="max_prep_time" value="" class="cds-radio__input" checked>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Any time</span>
+    </label>
+    {% if aggregations and aggregations.prep_time_ranges %}
+        {% for bucket in aggregations.prep_time_ranges %}
+        <label class="cds-radio {{ 'cds-radio--disabled' if bucket.doc_count == 0 }}">
+            <input type="radio" name="max_prep_time" 
+                   value="{% if '0-15' in bucket.key %}15{% elif '15-30' in bucket.key %}30{% elif '30-60' in bucket.key %}60{% else %}999{% endif %}" 
+                   class="cds-radio__input" {{ 'disabled' if bucket.doc_count == 0 }}>
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">{{ bucket.key }}</span>
+            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+        </label>
+        {% endfor %}
+    {% else %}
+        <!-- Fallback static options -->
+        <label class="cds-radio">
+            <input type="radio" name="max_prep_time" value="15" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">< 15 min</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="max_prep_time" value="30" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">15-30 min</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="max_prep_time" value="60" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">30-60 min</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="max_prep_time" value="999" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">> 60 min</span>
+        </label>
+    {% endif %}
+</div>
+
+<!-- Cook Time Filter Options -->
+<div class="cds-radio-group" id="cook-time-options">
+    <label class="cds-radio">
+        <input type="radio" name="max_cook_time" value="" class="cds-radio__input" checked>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Any time</span>
+    </label>
+    {% if aggregations and aggregations.cook_time_ranges %}
+        {% for bucket in aggregations.cook_time_ranges %}
+        <label class="cds-radio {{ 'cds-radio--disabled' if bucket.doc_count == 0 }}">
+            <input type="radio" name="max_cook_time" 
+                   value="{% if '0-15' in bucket.key %}15{% elif '15-30' in bucket.key %}30{% elif '30-45' in bucket.key %}45{% elif '45-60' in bucket.key %}60{% elif '60-90' in bucket.key %}90{% elif '90-120' in bucket.key %}120{% else %}999{% endif %}" 
+                   class="cds-radio__input" {{ 'disabled' if bucket.doc_count == 0 }}>
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">{{ bucket.key }}</span>
+            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+        </label>
+        {% endfor %}
+    {% else %}
+        <!-- Fallback static options -->
+        <label class="cds-radio">
+            <input type="radio" name="max_cook_time" value="30" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">< 30 min</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="max_cook_time" value="60" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">30-60 min</span>
+        </label>
+        <label class="cds-radio">
+            <input type="radio" name="max_cook_time" value="999" class="cds-radio__input">
+            <span class="cds-radio__checkmark"></span>
+            <span class="cds-radio__label-text">> 60 min</span>
+        </label>
+    {% endif %}
+</div>

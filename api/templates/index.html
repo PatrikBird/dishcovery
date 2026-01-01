@@ -13,9 +13,9 @@
 <body class="cds-layout">
     <!-- Fixed Header -->
     <header class="cds-header">
-        <!-- Mobile Menu Button (hidden on desktop) -->
-        <button class="cds-header__menu-trigger" aria-label="Open menu">
-            <iconify-icon icon="carbon:menu"></iconify-icon>
+        <!-- Mobile Filter Button (hidden on desktop) -->
+        <button class="cds-header__menu-trigger" aria-label="Open filters">
+            <iconify-icon icon="carbon:filter"></iconify-icon>
         </button>
 
         <!-- App Title -->
@@ -26,8 +26,8 @@
 
         <!-- Search Bar -->
         <div class="cds-header__search">
-            <form class="cds-search" hx-post="/search" hx-target="#search-results"
-                hx-trigger="keyup changed delay:300ms from:input[name=query]">
+            <form id="search-form" class="cds-search" method="post" hx-post="/search" hx-target="#search-results"
+                hx-trigger="keyup changed delay:300ms from:input[name=query], submit" hx-include="#filter-form">
                 <div class="cds-search__input-wrapper">
                     <iconify-icon icon="carbon:search" class="cds-search__icon"></iconify-icon>
                     <input type="text" name="query" class="cds-search__input" placeholder="Search recipes..."
@@ -45,24 +45,7 @@
     <div class="cds-content">
         <!-- Left Sidebar -->
         <aside class="cds-sidebar">
-            <section>
-                <h3>Filters</h3>
-                <p>Filter options will be implemented here</p>
-            </section>
-
-            <section>
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="/health">
-                            <iconify-icon icon="carbon:status-resolved"></iconify-icon>
-                            Health Check
-                        </a></li>
-                    <li><a href="/metrics">
-                            <iconify-icon icon="carbon:analytics"></iconify-icon>
-                            Metrics
-                        </a></li>
-                </ul>
-            </section>
+            {% include "partials/filter_sidebar.html" %}
         </aside>
 
         <!-- Sidebar Overlay for Mobile -->
@@ -75,6 +58,11 @@
                 <p>Search through 62,000+ recipes powered by Elasticsearch</p>
                 <p>API Version: {{ version }}</p>
             </section>
+
+            <!-- Active Filters Display -->
+            <div id="active-filters" class="cds-active-filters">
+                <!-- Active filter tags will appear here when filters are applied -->
+            </div>
 
             <!-- Search Results Area -->
             <div id="search-results"></div>
@@ -98,6 +86,7 @@
             const menuTrigger = document.querySelector('.cds-header__menu-trigger');
             const sidebar = document.querySelector('.cds-sidebar');
             const sidebarOverlay = document.querySelector('.cds-sidebar-overlay');
+            const filterForm = document.querySelector('#filter-form');
 
             // Clear button functionality
             if (searchInput && clearButton) {
@@ -120,6 +109,15 @@
                 });
             }
 
+            // Prevent default form submission and let HTMX handle it
+            const searchForm = document.querySelector('#search-form');
+            if (searchForm) {
+                searchForm.addEventListener('submit', function (event) {
+                    event.preventDefault(); // Prevent default GET submission
+                    // HTMX will handle the submission via hx-trigger="submit"
+                });
+            }
+
             // Mobile menu functionality
             if (menuTrigger && sidebar && sidebarOverlay) {
                 menuTrigger.addEventListener('click', function () {
@@ -132,6 +130,213 @@
                     sidebarOverlay.classList.remove('cds-sidebar-overlay--active');
                 });
             }
+
+            // Filter form functionality
+            if (filterForm) {
+                // Handle filter changes - HTMX will handle this automatically with hx-trigger="change"
+                filterForm.addEventListener('change', function (e) {
+                    // Update active filters display
+                    updateActiveFilters();
+                });
+
+                // Range input handlers are set up via event delegation below
+            }
+
+            function updateActiveFilters() {
+                const activeFiltersContainer = document.querySelector('#active-filters');
+                if (!activeFiltersContainer) return;
+
+                const activeFilters = [];
+                const formData = new FormData(filterForm);
+
+                // Process form data to build active filters
+                for (const [name, value] of formData.entries()) {
+                    if (value && value !== '' && value !== 'false') {
+                        let label = '';
+                        let displayValue = value;
+
+                        switch (name) {
+                            case 'cuisines':
+                                label = 'Cuisine';
+                                displayValue = value.charAt(0).toUpperCase() + value.slice(1);
+                                break;
+                            case 'difficulty':
+                                label = 'Difficulty';
+                                break;
+                            case 'is_vegan':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Vegan';
+                                }
+                                break;
+                            case 'is_vegetarian':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Vegetarian';
+                                }
+                                break;
+                            case 'is_gluten_free':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Gluten-Free';
+                                }
+                                break;
+                            case 'is_dairy_free':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Dairy-Free';
+                                }
+                                break;
+                            case 'is_nut_free':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Nut-Free';
+                                }
+                                break;
+                            case 'max_prep_time':
+                                if (value !== '999') {
+                                    label = 'Prep Time';
+                                    displayValue = `≤ ${value} min`;
+                                } else {
+                                    label = 'Prep Time';
+                                    displayValue = '> 60 min';
+                                }
+                                break;
+                            case 'max_cook_time':
+                                if (value !== '999') {
+                                    label = 'Cook Time';
+                                    displayValue = `≤ ${value} min`;
+                                } else {
+                                    label = 'Cook Time';
+                                    displayValue = '> 60 min';
+                                }
+                                break;
+                            case 'min_healthiness':
+                                // Only show chip if user moved slider above the current natural minimum
+                                const minInput = filterForm.querySelector('#min-healthiness');
+                                const naturalMin = minInput ? parseInt(minInput.dataset.naturalMin) : 16;
+                                if (value && parseInt(value) > naturalMin) {
+                                    label = 'Min Health Score';
+                                    displayValue = value;
+                                }
+                                break;
+                            case 'max_healthiness':
+                                // Only show chip if user moved slider below the current natural maximum
+                                const maxInput = filterForm.querySelector('#max-healthiness');
+                                const naturalMax = maxInput ? parseInt(maxInput.dataset.naturalMax) : 100;
+                                if (value && parseInt(value) < naturalMax) {
+                                    label = 'Max Health Score';
+                                    displayValue = value;
+                                }
+                                break;
+                        }
+
+                        if (label) {
+                            activeFilters.push({ name, value, label, displayValue });
+                        }
+                    }
+                }
+
+                // Update the active filters display
+                if (activeFilters.length > 0) {
+                    const filtersHTML = `
+                        <p class="cds-active-filters__title">Active Filters:</p>
+                        <div class="cds-active-filters__list">
+                            ${activeFilters.map(filter => `
+                                <span class="cds-filter-tag">
+                                    ${filter.label}: ${filter.displayValue}
+                                    <button type="button" class="cds-filter-tag__remove" onclick="removeFilter('${filter.name}', '${filter.value}')">
+                                        <iconify-icon icon="carbon:close"></iconify-icon>
+                                    </button>
+                                </span>
+                            `).join('')}
+                        </div>
+                    `;
+                    activeFiltersContainer.innerHTML = filtersHTML;
+                } else {
+                    activeFiltersContainer.innerHTML = '';
+                }
+            }
+
+            // Make removeFilter function global
+            window.removeFilter = function (name, value) {
+                const input = filterForm.querySelector(`[name="${name}"][value="${value}"]`);
+                if (input) {
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        // For range inputs, reset to current natural bounds
+                        if (name === 'min_healthiness') {
+                            const naturalMin = input.dataset.naturalMin || '16';
+                            input.value = naturalMin;
+                            document.querySelector('#min-healthiness-value').textContent = naturalMin;
+                        } else if (name === 'max_healthiness') {
+                            const naturalMax = input.dataset.naturalMax || '100';
+                            input.value = naturalMax;
+                            document.querySelector('#max-healthiness-value').textContent = naturalMax;
+                        }
+                    }
+
+                    // Clear radio group if needed
+                    if (input.type === 'radio') {
+                        // Check the "All" or default option if available
+                        const defaultRadio = filterForm.querySelector(`[name="${name}"][value=""]`);
+                        if (defaultRadio) {
+                            defaultRadio.checked = true;
+                        }
+                    }
+
+                    updateActiveFilters();
+                    // Trigger HTMX by dispatching a change event
+                    filterForm.dispatchEvent(new Event('change'));
+                }
+            };
+
+            // Use event delegation for range inputs to work after HTMX updates
+            document.body.addEventListener('input', function (event) {
+                if (event.target.id === 'min-healthiness') {
+                    const minHealthinessValue = document.querySelector('#min-healthiness-value');
+                    const maxHealthinessInput = document.querySelector('#max-healthiness');
+                    const maxHealthinessValue = document.querySelector('#max-healthiness-value');
+
+                    if (minHealthinessValue) {
+                        minHealthinessValue.textContent = event.target.value;
+                    }
+
+                    // Ensure min doesn't exceed max
+                    if (maxHealthinessInput && parseInt(event.target.value) > parseInt(maxHealthinessInput.value)) {
+                        maxHealthinessInput.value = event.target.value;
+                        if (maxHealthinessValue) {
+                            maxHealthinessValue.textContent = event.target.value;
+                        }
+                    }
+                } else if (event.target.id === 'max-healthiness') {
+                    const maxHealthinessValue = document.querySelector('#max-healthiness-value');
+                    const minHealthinessInput = document.querySelector('#min-healthiness');
+                    const minHealthinessValue = document.querySelector('#min-healthiness-value');
+
+                    if (maxHealthinessValue) {
+                        maxHealthinessValue.textContent = event.target.value;
+                    }
+
+                    // Ensure max doesn't go below min
+                    if (minHealthinessInput && parseInt(event.target.value) < parseInt(minHealthinessInput.value)) {
+                        minHealthinessInput.value = event.target.value;
+                        if (minHealthinessValue) {
+                            minHealthinessValue.textContent = event.target.value;
+                        }
+                    }
+                }
+            });
+
+            // Handle change events for range inputs to trigger search
+            document.body.addEventListener('change', function (event) {
+                if (event.target.id === 'min-healthiness' || event.target.id === 'max-healthiness') {
+                    if (filterForm) {
+                        updateActiveFilters();
+                    }
+                }
+            });
         });
     </script>
 </body>

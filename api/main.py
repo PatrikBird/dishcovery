@@ -46,9 +46,9 @@ bulk_operations_total = Counter(
 )
 
 AGGREGATION_CONFIGS = {
-    "cuisines": {"terms": {"field": "cuisine_list", "size": 20}},
-    "difficulty_levels": {"terms": {"field": "difficulty", "size": 10}},
-    "dietary_profiles": {"terms": {"field": "dietary_profile", "size": 15}},
+    "cuisines": {"terms": {"field": "cuisine_list.keyword", "size": 1000, "order": {"_key": "asc"}}},
+    "difficulty_levels": {"terms": {"field": "difficulty.keyword", "size": 50, "order": {"_key": "asc"}}},
+    "dietary_profiles": {"terms": {"field": "dietary_profile.keyword", "size": 50, "order": {"_key": "asc"}}},
     "healthiness_stats": {"stats": {"field": "healthiness_score"}},
     "prep_time_ranges": {
         "range": {
@@ -136,7 +136,8 @@ def build_search_query(request: SearchRequest) -> dict:
     query_body = {
         "size": request.size,
         "from": request.from_,
-        "query": {"bool": {"must": [], "filter": []}},
+        "query": {"bool": {"must": []}},
+        "post_filter": {"bool": {"filter": []}},
     }
 
     # Add aggregations and runtime mappings if requested
@@ -151,7 +152,7 @@ def build_search_query(request: SearchRequest) -> dict:
         }
         query_body["aggs"] = AGGREGATION_CONFIGS
 
-    # Add text search
+    # Add text search to main query (affects both results and aggregations)
     if request.query:
         query_body["query"]["bool"]["must"].append(
             {
@@ -171,24 +172,24 @@ def build_search_query(request: SearchRequest) -> dict:
     else:
         query_body["query"]["bool"]["must"].append({"match_all": {}})
 
-    # Add filters
+    # Add filters to post_filter (affects results but not aggregations)
     if request.cuisines:
-        query_body["query"]["bool"]["filter"].append(
-            {"terms": {"cuisine_list": request.cuisines}}
+        query_body["post_filter"]["bool"]["filter"].append(
+            {"terms": {"cuisine_list.keyword": request.cuisines}}
         )
 
     if request.difficulty:
-        query_body["query"]["bool"]["filter"].append(
-            {"term": {"difficulty": request.difficulty.value}}
+        query_body["post_filter"]["bool"]["filter"].append(
+            {"term": {"difficulty.keyword": request.difficulty.value}}
         )
 
     if request.max_prep_time:
-        query_body["query"]["bool"]["filter"].append(
+        query_body["post_filter"]["bool"]["filter"].append(
             {"range": {"est_prep_time_min": {"lte": request.max_prep_time}}}
         )
 
     if request.max_cook_time:
-        query_body["query"]["bool"]["filter"].append(
+        query_body["post_filter"]["bool"]["filter"].append(
             {"range": {"est_cook_time_min": {"lte": request.max_cook_time}}}
         )
 
@@ -203,7 +204,7 @@ def build_search_query(request: SearchRequest) -> dict:
 
     for value, field in dietary_filters:
         if value is not None:
-            query_body["query"]["bool"]["filter"].append({"term": {field: value}})
+            query_body["post_filter"]["bool"]["filter"].append({"term": {field: value}})
 
     # Add healthiness score filters
     if request.min_healthiness or request.max_healthiness:
@@ -213,9 +214,13 @@ def build_search_query(request: SearchRequest) -> dict:
         if request.max_healthiness:
             range_filter["lte"] = request.max_healthiness
 
-        query_body["query"]["bool"]["filter"].append(
+        query_body["post_filter"]["bool"]["filter"].append(
             {"range": {"healthiness_score": range_filter}}
         )
+
+    # Clean up empty post_filter
+    if not query_body["post_filter"]["bool"]["filter"]:
+        del query_body["post_filter"]
 
     return query_body
 
@@ -285,8 +290,55 @@ async def load_initial_data():
 
 @app.get("/")
 async def root(request: Request):
+    # Get initial aggregations for the filter sidebar
+    try:
+        # Build a basic query to get aggregations
+        query_body = {
+            "size": 0,  # We only want aggregations, not results
+            "query": {"match_all": {}},
+            "runtime_mappings": {
+                "total_time_min": {
+                    "type": "long",
+                    "script": {
+                        "source": "emit((doc['est_prep_time_min'].size() > 0 ? doc['est_prep_time_min'].value : 0) + (doc['est_cook_time_min'].size() > 0 ? doc['est_cook_time_min'].value : 0))"
+                    },
+                }
+            },
+            "aggs": AGGREGATION_CONFIGS,
+        }
+
+        result = await es_client.search_recipes(query_body)
+        aggregations = None
+        if "aggregations" in result:
+            aggregations = parse_aggregations(result["aggregations"])
+    except Exception as e:
+        # If aggregation fails, we'll just not pass aggregations
+        print(f"Failed to load initial aggregations: {e}")
+        aggregations = None
+
+    # Initialize empty current_filters for page load
+    current_filters = {
+        "cuisines": [],
+        "difficulty": None,
+        "is_vegan": None,
+        "is_vegetarian": None,
+        "is_gluten_free": None,
+        "is_dairy_free": None,
+        "is_nut_free": None,
+        "max_prep_time": None,
+        "max_cook_time": None,
+        "min_healthiness": None,
+        "max_healthiness": None,
+    }
+
     return templates.TemplateResponse(
-        "index.html", {"request": request, "version": settings.API_VERSION}
+        "index.html",
+        {
+            "request": request,
+            "version": settings.API_VERSION,
+            "aggregations": aggregations,
+            "current_filters": current_filters,
+        },
     )
 
 
@@ -359,19 +411,62 @@ async def search_recipes(
     query: str = Form(""),
     size: int = Form(10),
     from_: int = Form(0, alias="from"),
+    cuisines: Optional[List[str]] = Form(None),
+    difficulty: Optional[str] = Form(None),
+    is_vegan: Optional[str] = Form(None),
+    is_vegetarian: Optional[str] = Form(None),
+    is_gluten_free: Optional[str] = Form(None),
+    is_dairy_free: Optional[str] = Form(None),
+    is_nut_free: Optional[str] = Form(None),
+    max_prep_time: Optional[str] = Form(None),
+    max_cook_time: Optional[str] = Form(None),
+    min_healthiness: Optional[str] = Form(None),
+    max_healthiness: Optional[str] = Form(None),
 ):
-    """Search recipes with form data from HTMX"""
+    """Search recipes with form data from HTMX including filters"""
 
     start_time = time.time()
     status_code = 200
 
     try:
+        # Convert string boolean values to actual booleans
+        def parse_bool(value):
+            if value == "true":
+                return True
+            elif value == "false":
+                return False
+            return None
+
+        # Convert string integer values to actual integers
+        def parse_int(value):
+            if value and value.strip():
+                try:
+                    return int(value.strip())
+                except (ValueError, TypeError):
+                    return None
+            return None
+
         # Build SearchRequest object from form data
         search_request = SearchRequest(
             query=query.strip() if query else "",
             size=min(size, 50),  # Limit max size for performance
             from_=max(from_, 0),  # Ensure non-negative offset
-            include_aggregations=False,  # Keep it simple for now
+            include_aggregations=True,  # Always include aggregations for filter counts
+            cuisines=cuisines if cuisines else None,
+            difficulty=difficulty if difficulty else None,
+            is_vegan=parse_bool(is_vegan),
+            is_vegetarian=parse_bool(is_vegetarian),
+            is_gluten_free=parse_bool(is_gluten_free),
+            is_dairy_free=parse_bool(is_dairy_free),
+            is_nut_free=parse_bool(is_nut_free),
+            max_prep_time=parse_int(max_prep_time),
+            max_cook_time=parse_int(max_cook_time),
+            min_healthiness=parse_int(min_healthiness)
+            if parse_int(min_healthiness) and parse_int(min_healthiness) > 16
+            else None,
+            max_healthiness=parse_int(max_healthiness)
+            if parse_int(max_healthiness) and parse_int(max_healthiness) < 100
+            else None,
         )
 
         query_body = build_search_query(search_request)
@@ -379,11 +474,28 @@ async def search_recipes(
 
         recipes = [Recipe(**hit["_source"]) for hit in result["hits"]["hits"]]
 
-        # For basic search, don't include aggregations to keep response fast
+        # Parse aggregations if available
         aggregations = None
+        if "aggregations" in result:
+            aggregations = parse_aggregations(result["aggregations"])
+
+        # Build current filter state for template
+        current_filters = {
+            "cuisines": cuisines or [],
+            "difficulty": difficulty,
+            "is_vegan": parse_bool(is_vegan),
+            "is_vegetarian": parse_bool(is_vegetarian),
+            "is_gluten_free": parse_bool(is_gluten_free),
+            "is_dairy_free": parse_bool(is_dairy_free),
+            "is_nut_free": parse_bool(is_nut_free),
+            "max_prep_time": parse_int(max_prep_time),
+            "max_cook_time": parse_int(max_cook_time),
+            "min_healthiness": parse_int(min_healthiness),
+            "max_healthiness": parse_int(max_healthiness),
+        }
 
         return templates.TemplateResponse(
-            "partials/search_results.html",
+            "partials/search_response.html",
             {
                 "request": request,
                 "total": result["hits"]["total"]["value"],
@@ -391,6 +503,7 @@ async def search_recipes(
                 "took_ms": result["took"],
                 "aggregations": aggregations,
                 "query": search_request.query,  # Pass back the query for display
+                "current_filters": current_filters,  # Pass current filter state
             },
         )
 

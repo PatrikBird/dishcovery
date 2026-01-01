@@ -1,0 +1,198 @@
+<!-- Combined search results and filter updates -->
+
+<!-- Main search results -->
+<div id="search-results">
+    {% include "partials/search_results.html" %}
+</div>
+
+<!-- Out of band filter updates -->
+<div id="cuisines-options" hx-swap-oob="true">
+    {% if aggregations and aggregations.cuisines %}
+    {% for bucket in aggregations.cuisines %}
+    <label class="cds-checkbox {{ 'cds-checkbox--disabled' if bucket.doc_count == 0 }}">
+        <input type="checkbox" name="cuisines" value="{{ bucket.key }}" class="cds-checkbox__input" {{ 'checked' if
+            bucket.key in current_filters.cuisines }} {{ 'disabled' if bucket.doc_count==0 }}>
+        <span class="cds-checkbox__checkmark"></span>
+        <span class="cds-checkbox__label-text">{{ bucket.key|title }}</span>
+        <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+    </label>
+    {% endfor %}
+    {% else %}
+    <!-- Fallback static options -->
+    <label class="cds-checkbox">
+        <input type="checkbox" name="cuisines" value="italian" class="cds-checkbox__input" {{ 'checked' if 'italian' in
+            current_filters.cuisines }}>
+        <span class="cds-checkbox__checkmark"></span>
+        <span class="cds-checkbox__label-text">Italian</span>
+    </label>
+    <label class="cds-checkbox">
+        <input type="checkbox" name="cuisines" value="asian" class="cds-checkbox__input" {{ 'checked' if 'asian' in
+            current_filters.cuisines }}>
+        <span class="cds-checkbox__checkmark"></span>
+        <span class="cds-checkbox__label-text">Asian</span>
+    </label>
+    {% endif %}
+</div>
+
+<div id="difficulty-options" hx-swap-oob="true">
+    <label class="cds-radio">
+        <input type="radio" name="difficulty" value="" class="cds-radio__input" {{ 'checked' if not
+            current_filters.difficulty }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">All</span>
+    </label>
+    {% if aggregations and aggregations.difficulty_levels %}
+    {% for bucket in aggregations.difficulty_levels %}
+    <label class="cds-radio {{ 'cds-radio--disabled' if bucket.doc_count == 0 }}">
+        <input type="radio" name="difficulty" value="{{ bucket.key }}" class="cds-radio__input" {{ 'checked' if
+            bucket.key==current_filters.difficulty }} {{ 'disabled' if bucket.doc_count==0 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">{{ bucket.key|title }}</span>
+        <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+    </label>
+    {% endfor %}
+    {% else %}
+    <!-- Fallback static options -->
+    <label class="cds-radio">
+        <input type="radio" name="difficulty" value="easy" class="cds-radio__input" {{ 'checked' if
+            current_filters.difficulty=='easy' }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Easy</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="difficulty" value="medium" class="cds-radio__input" {{ 'checked' if
+            current_filters.difficulty=='medium' }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Medium</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="difficulty" value="hard" class="cds-radio__input" {{ 'checked' if
+            current_filters.difficulty=='hard' }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Hard</span>
+    </label>
+    {% endif %}
+</div>
+
+<div id="prep-time-options" hx-swap-oob="true">
+    <label class="cds-radio">
+        <input type="radio" name="max_prep_time" value="" class="cds-radio__input" {{ 'checked' if not
+            current_filters.max_prep_time }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Any time</span>
+    </label>
+    {% if aggregations and aggregations.prep_time_ranges %}
+    {% for bucket in aggregations.prep_time_ranges %}
+    {% set bucket_value = 15 if '0-15' in bucket.key else (30 if '15-30' in bucket.key else (60 if '30-60' in bucket.key
+    else 999)) %}
+    <label class="cds-radio {{ 'cds-radio--disabled' if bucket.doc_count == 0 }}">
+        <input type="radio" name="max_prep_time" value="{{ bucket_value }}" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_prep_time==bucket_value }} {{ 'disabled' if bucket.doc_count==0 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">{{ bucket.key }}</span>
+        <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+    </label>
+    {% endfor %}
+    {% else %}
+    <!-- Fallback static options -->
+    <label class="cds-radio">
+        <input type="radio" name="max_prep_time" value="15" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_prep_time==15 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">
+            < 15 min</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="max_prep_time" value="30" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_prep_time==30 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">15-30 min</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="max_prep_time" value="60" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_prep_time==60 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">30-60 min</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="max_prep_time" value="999" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_prep_time==999 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">> 60 min</span>
+    </label>
+    {% endif %}
+</div>
+
+<div id="cook-time-options" hx-swap-oob="true">
+    <label class="cds-radio">
+        <input type="radio" name="max_cook_time" value="" class="cds-radio__input" {{ 'checked' if not
+            current_filters.max_cook_time }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">Any time</span>
+    </label>
+    {% if aggregations and aggregations.cook_time_ranges %}
+    {% for bucket in aggregations.cook_time_ranges %}
+    {% set bucket_value = 15 if '0-15' in bucket.key else (30 if '15-30' in bucket.key else (45 if '30-45' in bucket.key
+    else (60 if '45-60' in bucket.key else (90 if '60-90' in bucket.key else (120 if '90-120' in bucket.key else
+    999))))) %}
+    <label class="cds-radio {{ 'cds-radio--disabled' if bucket.doc_count == 0 }}">
+        <input type="radio" name="max_cook_time" value="{{ bucket_value }}" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_cook_time==bucket_value }} {{ 'disabled' if bucket.doc_count==0 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">{{ bucket.key }}</span>
+        <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+    </label>
+    {% endfor %}
+    {% else %}
+    <!-- Fallback static options -->
+    <label class="cds-radio">
+        <input type="radio" name="max_cook_time" value="30" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_cook_time==30 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">
+            < 30 min</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="max_cook_time" value="60" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_cook_time==60 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">30-60 min</span>
+    </label>
+    <label class="cds-radio">
+        <input type="radio" name="max_cook_time" value="999" class="cds-radio__input" {{ 'checked' if
+            current_filters.max_cook_time==999 }}>
+        <span class="cds-radio__checkmark"></span>
+        <span class="cds-radio__label-text">> 60 min</span>
+    </label>
+    {% endif %}
+</div>
+
+<div id="healthiness-range-section" hx-swap-oob="true">
+    <div class="cds-range-group">
+        <label class="cds-form-label">
+            Minimum Score: <span id="min-healthiness-value">
+                {% if current_filters.min_healthiness %}{{ current_filters.min_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}
+            </span>
+        </label>
+        <input type="range" name="min_healthiness"
+            min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+            max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+            value="{% if current_filters.min_healthiness %}{{ current_filters.min_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+            data-natural-min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+            data-natural-max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+            class="cds-range-input" id="min-healthiness">
+
+        <label class="cds-form-label">
+            Maximum Score: <span id="max-healthiness-value">
+                {% if current_filters.max_healthiness %}{{ current_filters.max_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}
+            </span>
+        </label>
+        <input type="range" name="max_healthiness"
+            min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+            max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+            value="{% if current_filters.max_healthiness %}{{ current_filters.max_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+            data-natural-min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+            data-natural-max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+            class="cds-range-input" id="max-healthiness">
+    </div>
+</div>

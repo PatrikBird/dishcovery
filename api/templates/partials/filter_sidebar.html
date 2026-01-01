@@ -1,0 +1,301 @@
+<!-- Dynamic Filter Sidebar Partial -->
+<div class="cds-sidebar__content">
+    <h3 class="cds-sidebar__title">Filters</h3>
+
+    <!-- Filter Form -->
+    <form id="filter-form" class="cds-filter-form" hx-post="/search" hx-target="#search-results"
+        hx-include="#search-form" hx-trigger="change">
+
+        <!-- Cuisines Filter -->
+        <div class="cds-accordion">
+            <details class="cds-accordion__item" open>
+                <summary class="cds-accordion__header">
+                    <iconify-icon icon="carbon:chevron-down" class="cds-accordion__chevron"></iconify-icon>
+                    Cuisines
+                </summary>
+                <div class="cds-accordion__content">
+                    <div class="cds-checkbox-group" id="cuisines-options">
+                        {% if aggregations and aggregations.cuisines %}
+                        {% for bucket in aggregations.cuisines %}
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="cuisines" value="{{ bucket.key }}" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">{{ bucket.key|title }}</span>
+                            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+                        </label>
+                        {% endfor %}
+                        {% else %}
+                        <!-- Fallback static options -->
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="cuisines" value="italian" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Italian</span>
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="cuisines" value="asian" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Asian</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Difficulty Filter -->
+        <div class="cds-accordion">
+            <details class="cds-accordion__item" open>
+                <summary class="cds-accordion__header">
+                    <iconify-icon icon="carbon:chevron-down" class="cds-accordion__chevron"></iconify-icon>
+                    Difficulty
+                </summary>
+                <div class="cds-accordion__content">
+                    <div class="cds-radio-group" id="difficulty-options">
+                        <label class="cds-radio">
+                            <input type="radio" name="difficulty" value="" class="cds-radio__input" checked>
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">All</span>
+                        </label>
+                        {% if aggregations and aggregations.difficulty_levels %}
+                        {% for bucket in aggregations.difficulty_levels %}
+                        <label class="cds-radio">
+                            <input type="radio" name="difficulty" value="{{ bucket.key }}" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">{{ bucket.key|title }}</span>
+                            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+                        </label>
+                        {% endfor %}
+                        {% else %}
+                        <!-- Fallback static options -->
+                        <label class="cds-radio">
+                            <input type="radio" name="difficulty" value="easy" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">Easy</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="difficulty" value="medium" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">Medium</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="difficulty" value="hard" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">Hard</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Dietary Preferences Filter -->
+        <div class="cds-accordion">
+            <details class="cds-accordion__item" open>
+                <summary class="cds-accordion__header">
+                    <iconify-icon icon="carbon:chevron-down" class="cds-accordion__chevron"></iconify-icon>
+                    Dietary Preferences
+                </summary>
+                <div class="cds-accordion__content">
+                    <div class="cds-checkbox-group">
+                        {% if aggregations and aggregations.dietary_profiles %}
+                        <!-- Map dietary profile aggregations to individual checkboxes -->
+                        {% set dietary_counts = {} %}
+                        {% for bucket in aggregations.dietary_profiles %}
+                        {% set _ = dietary_counts.update({bucket.key: bucket.doc_count}) %}
+                        {% endfor %}
+                        {% endif %}
+
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_vegan" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Vegan</span>
+                            {% if dietary_counts and dietary_counts.get('vegan') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('vegan') }})</span>
+                            {% endif %}
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_vegetarian" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Vegetarian</span>
+                            {% if dietary_counts and dietary_counts.get('vegetarian') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('vegetarian') }})</span>
+                            {% endif %}
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_gluten_free" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Gluten-Free</span>
+                            {% if dietary_counts and dietary_counts.get('gluten-free') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('gluten-free') }})</span>
+                            {% endif %}
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_dairy_free" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Dairy-Free</span>
+                            {% if dietary_counts and dietary_counts.get('dairy-free') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('dairy-free') }})</span>
+                            {% endif %}
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_nut_free" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Nut-Free</span>
+                            {% if dietary_counts and dietary_counts.get('nut-free') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('nut-free') }})</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Prep Time Filter -->
+        <div class="cds-accordion">
+            <details class="cds-accordion__item" open>
+                <summary class="cds-accordion__header">
+                    <iconify-icon icon="carbon:chevron-down" class="cds-accordion__chevron"></iconify-icon>
+                    Prep Time
+                </summary>
+                <div class="cds-accordion__content">
+                    <div class="cds-radio-group" id="prep-time-options">
+                        <label class="cds-radio">
+                            <input type="radio" name="max_prep_time" value="" class="cds-radio__input" checked>
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">Any time</span>
+                        </label>
+                        {% if aggregations and aggregations.prep_time_ranges %}
+                        {% for bucket in aggregations.prep_time_ranges %}
+                        <label class="cds-radio">
+                            <input type="radio" name="max_prep_time"
+                                value="{% if '0-15' in bucket.key %}15{% elif '15-30' in bucket.key %}30{% elif '30-60' in bucket.key %}60{% else %}999{% endif %}"
+                                class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">{{ bucket.key }}</span>
+                            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+                        </label>
+                        {% endfor %}
+                        {% else %}
+                        <!-- Fallback static options -->
+                        <label class="cds-radio">
+                            <input type="radio" name="max_prep_time" value="15" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">
+                                < 15 min</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="max_prep_time" value="30" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">15-30 min</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="max_prep_time" value="60" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">30-60 min</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="max_prep_time" value="999" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">> 60 min</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Cook Time Filter -->
+        <div class="cds-accordion">
+            <details class="cds-accordion__item" open>
+                <summary class="cds-accordion__header">
+                    <iconify-icon icon="carbon:chevron-down" class="cds-accordion__chevron"></iconify-icon>
+                    Cook Time
+                </summary>
+                <div class="cds-accordion__content">
+                    <div class="cds-radio-group" id="cook-time-options">
+                        <label class="cds-radio">
+                            <input type="radio" name="max_cook_time" value="" class="cds-radio__input" checked>
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">Any time</span>
+                        </label>
+                        {% if aggregations and aggregations.cook_time_ranges %}
+                        {% for bucket in aggregations.cook_time_ranges %}
+                        <label class="cds-radio">
+                            <input type="radio" name="max_cook_time"
+                                value="{% if '0-15' in bucket.key %}15{% elif '15-30' in bucket.key %}30{% elif '30-45' in bucket.key %}45{% elif '45-60' in bucket.key %}60{% elif '60-90' in bucket.key %}90{% elif '90-120' in bucket.key %}120{% else %}999{% endif %}"
+                                class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">{{ bucket.key }}</span>
+                            <span class="cds-filter-count">({{ bucket.doc_count }})</span>
+                        </label>
+                        {% endfor %}
+                        {% else %}
+                        <!-- Fallback static options -->
+                        <label class="cds-radio">
+                            <input type="radio" name="max_cook_time" value="30" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">
+                                < 30 min</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="max_cook_time" value="60" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">30-60 min</span>
+                        </label>
+                        <label class="cds-radio">
+                            <input type="radio" name="max_cook_time" value="999" class="cds-radio__input">
+                            <span class="cds-radio__checkmark"></span>
+                            <span class="cds-radio__label-text">> 60 min</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        <!-- Healthiness Score Filter -->
+        <div class="cds-accordion">
+            <details class="cds-accordion__item" open>
+                <summary class="cds-accordion__header">
+                    <iconify-icon icon="carbon:chevron-down" class="cds-accordion__chevron"></iconify-icon>
+                    Healthiness Score
+                    {% if aggregations and aggregations.healthiness_stats %}
+                    <small style="color: var(--cds-text-helper); margin-left: 8px;">
+                        ({{ aggregations.healthiness_stats.min|int }}-{{ aggregations.healthiness_stats.max|int }})
+                    </small>
+                    {% endif %}
+                </summary>
+                <div class="cds-accordion__content">
+                    <div class="cds-range-group" id="healthiness-range-section">
+                        <label class="cds-form-label">
+                            Minimum Score: <span id="min-healthiness-value">
+                                {% if current_filters.min_healthiness %}{{ current_filters.min_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}
+                            </span>
+                        </label>
+                        <input type="range" name="min_healthiness"
+                            min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+                            max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+                            value="{% if current_filters.min_healthiness %}{{ current_filters.min_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+                            data-natural-min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+                            data-natural-max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+                            class="cds-range-input" id="min-healthiness">
+
+                        <label class="cds-form-label">
+                            Maximum Score: <span id="max-healthiness-value">
+                                {% if current_filters.max_healthiness %}{{ current_filters.max_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}
+                            </span>
+                        </label>
+                        <input type="range" name="max_healthiness"
+                            min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+                            max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+                            value="{% if current_filters.max_healthiness %}{{ current_filters.max_healthiness }}{% elif aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+                            data-natural-min="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.min|int }}{% else %}16{% endif %}"
+                            data-natural-max="{% if aggregations and aggregations.healthiness_stats %}{{ aggregations.healthiness_stats.max|int }}{% else %}100{% endif %}"
+                            class="cds-range-input" id="max-healthiness">
+                    </div>
+                </div>
+            </details>
+        </div>
+
+    </form>
+</div>
