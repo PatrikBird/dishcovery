@@ -147,7 +147,7 @@ dishcovery/
 
 **Services**:
 - API: http://localhost:8000
-- Elasticsearch: http://localhost:9200  
+- Elasticsearch: http://localhost:9200
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3001 (admin/admin)
 
