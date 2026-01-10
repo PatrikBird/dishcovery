@@ -411,6 +411,7 @@ async def search_recipes(
     query: str = Form(""),
     size: int = Form(10),
     from_: int = Form(0, alias="from"),
+    append: Optional[str] = Form(None),
     cuisines: Optional[List[str]] = Form(None),
     difficulty: Optional[str] = Form(None),
     is_vegan: Optional[str] = Form(None),
@@ -427,6 +428,7 @@ async def search_recipes(
 
     start_time = time.time()
     status_code = 200
+    is_append = append == "true"
 
     try:
         # Convert string boolean values to actual booleans
@@ -451,7 +453,7 @@ async def search_recipes(
             query=query.strip() if query else "",
             size=min(size, 50),  # Limit max size for performance
             from_=max(from_, 0),  # Ensure non-negative offset
-            include_aggregations=True,  # Always include aggregations for filter counts
+            include_aggregations=not is_append,  # Skip aggregations for append requests
             cuisines=cuisines if cuisines else None,
             difficulty=difficulty if difficulty else None,
             is_vegan=parse_bool(is_vegan),
@@ -473,6 +475,20 @@ async def search_recipes(
         result = await es_client.search_recipes(query_body)
 
         recipes = [Recipe(**hit["_source"]) for hit in result["hits"]["hits"]]
+        total = result["hits"]["total"]["value"]
+
+        # For append requests, return just the additional cards
+        if is_append:
+            return templates.TemplateResponse(
+                "partials/search_results_append.html",
+                {
+                    "request": request,
+                    "total": total,
+                    "recipes": recipes,
+                    "from_": search_request.from_,
+                    "size": search_request.size,
+                },
+            )
 
         # Parse aggregations if available
         aggregations = None
@@ -498,12 +514,14 @@ async def search_recipes(
             "partials/search_response.html",
             {
                 "request": request,
-                "total": result["hits"]["total"]["value"],
+                "total": total,
                 "recipes": recipes,
                 "took_ms": result["took"],
                 "aggregations": aggregations,
                 "query": search_request.query,  # Pass back the query for display
                 "current_filters": current_filters,  # Pass current filter state
+                "from_": search_request.from_,
+                "size": search_request.size,
             },
         )
 

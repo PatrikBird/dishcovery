@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dishcovery - Recipe Search</title>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/static/styles.css">
     <script src="/static/htmx.min.js"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
@@ -20,7 +21,7 @@
 
         <!-- App Title -->
         <h1 class="cds-header__title">
-            <iconify-icon icon="carbon:restaurant"></iconify-icon>
+            <img src="/static/favicon.svg" alt="" class="cds-header__logo">
             Dishcovery
         </h1>
 
@@ -53,28 +54,15 @@
 
         <!-- Main Content -->
         <main class="cds-main">
-            <section>
-                <h2>Welcome to Dishcovery</h2>
-                <p>Search through 62,000+ recipes powered by Elasticsearch</p>
-                <p>API Version: {{ version }}</p>
-            </section>
-
             <!-- Active Filters Display -->
             <div id="active-filters" class="cds-active-filters">
                 <!-- Active filter tags will appear here when filters are applied -->
             </div>
 
             <!-- Search Results Area -->
-            <div id="search-results"></div>
-
-            <section>
-                <h3>API Endpoints</h3>
-                <ul>
-                    <li>POST /search - Recipe Search</li>
-                    <li>POST /bulk-load - Bulk Load Recipes</li>
-                </ul>
-                <p>Ready for HTMX-powered dynamic interactions!</p>
-            </section>
+            <div id="search-results">
+                {% include "partials/search_results.html" %}
+            </div>
         </main>
     </div>
 

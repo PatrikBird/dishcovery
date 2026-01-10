@@ -1,163 +1,182 @@
 <!-- Search Results Fragment for HTMX -->
-{% if total > 0 %}
-<div class="search-summary">
-    <h3>Search Results</h3>
-    <p>Found <strong>{{ total }}</strong> recipes{% if query %} for "{{ query }}"{% endif %} in {{ took_ms }}ms</p>
+{% if total is defined and total > 0 %}
+<!-- Results Summary Header -->
+<div class="cds-results-summary">
+    <div class="cds-results-summary__text">
+        <span class="cds-results-summary__count">Found <strong>{{ "{:,}".format(total) }}</strong> recipes</span>
+        {% if query %}<span class="cds-results-summary__query">for "{{ query }}"</span>{% endif %}
+        <span class="cds-results-summary__time">in {{ took_ms }}ms</span>
+    </div>
 </div>
 
-<div class="results">
+<!-- Recipe Cards Grid -->
+<div class="cds-recipe-grid" id="recipe-grid">
     {% for recipe in recipes %}
-    <article class="recipe">
-        <h4>{{ recipe.recipe_title }}</h4>
-        {% if recipe.description %}
-            <p class="description">{{ recipe.description[:200] }}{% if recipe.description|length > 200 %}...{% endif %}</p>
-        {% endif %}
-        
-        <div class="recipe-meta">
-            {% if recipe.cuisine_list %}
-                <span class="cuisines">{{ recipe.cuisine_list | join(', ') }}</span>
-            {% endif %}
+    <article class="cds-recipe-card">
+        <!-- Card Header -->
+        <div class="cds-recipe-card__header">
+            <h3 class="cds-recipe-card__title">{{ recipe.recipe_title }}</h3>
             {% if recipe.difficulty %}
-                <span class="difficulty">{{ recipe.difficulty }}</span>
+            <span class="cds-tag cds-tag--difficulty cds-tag--{{ recipe.difficulty|lower }}">
+                {% if recipe.difficulty|lower == 'easy' %}
+                <iconify-icon icon="carbon:skill-level-basic"></iconify-icon>
+                {% elif recipe.difficulty|lower == 'medium' %}
+                <iconify-icon icon="carbon:skill-level-intermediate"></iconify-icon>
+                {% else %}
+                <iconify-icon icon="carbon:skill-level-advanced"></iconify-icon>
+                {% endif %}
+                {{ recipe.difficulty|title }}
+            </span>
             {% endif %}
-            {% if recipe.est_prep_time_min %}
-                <span class="prep-time">{{ recipe.est_prep_time_min }}min prep</span>
+        </div>
+
+        <!-- Description -->
+        {% if recipe.description %}
+        <p class="cds-recipe-card__description">{{ recipe.description[:150] }}{% if recipe.description|length > 150 %}...{% endif %}</p>
+        {% endif %}
+
+        <!-- Tags Row -->
+        <div class="cds-recipe-card__tags">
+            {% if recipe.cuisine_list %}
+            {% for cuisine in recipe.cuisine_list[:3] %}
+            <span class="cds-tag cds-tag--cuisine">
+                <iconify-icon icon="carbon:restaurant"></iconify-icon>
+                {{ cuisine|title }}
+            </span>
+            {% endfor %}
+            {% if recipe.cuisine_list|length > 3 %}
+            <span class="cds-tag cds-tag--more">+{{ recipe.cuisine_list|length - 3 }}</span>
             {% endif %}
-            {% if recipe.est_cook_time_min %}
-                <span class="cook-time">{{ recipe.est_cook_time_min }}min cook</span>
             {% endif %}
+
+            {% if recipe.is_vegan %}
+            <span class="cds-tag cds-tag--dietary cds-tag--vegan">Vegan</span>
+            {% elif recipe.is_vegetarian %}
+            <span class="cds-tag cds-tag--dietary cds-tag--vegetarian">Vegetarian</span>
+            {% endif %}
+
+            {% if recipe.is_gluten_free %}
+            <span class="cds-tag cds-tag--dietary cds-tag--gf">GF</span>
+            {% endif %}
+
+            {% if recipe.is_dairy_free %}
+            <span class="cds-tag cds-tag--dietary cds-tag--df">DF</span>
+            {% endif %}
+
+            {% if recipe.is_nut_free %}
+            <span class="cds-tag cds-tag--dietary cds-tag--nf">NF</span>
+            {% endif %}
+        </div>
+
+        <!-- Time & Health Info -->
+        <div class="cds-recipe-card__meta">
+            <div class="cds-recipe-card__times">
+                {% if recipe.est_prep_time_min %}
+                <span class="cds-recipe-card__time">
+                    <iconify-icon icon="carbon:time"></iconify-icon>
+                    {{ recipe.est_prep_time_min }} min prep
+                </span>
+                {% endif %}
+                {% if recipe.est_cook_time_min %}
+                <span class="cds-recipe-card__time">
+                    <iconify-icon icon="carbon:flame"></iconify-icon>
+                    {{ recipe.est_cook_time_min }} min cook
+                </span>
+                {% endif %}
+            </div>
+
             {% if recipe.healthiness_score %}
-                <span class="healthiness">{{ recipe.healthiness_score }}/100 health</span>
+            <div class="cds-recipe-card__health">
+                <span class="cds-recipe-card__health-label">
+                    <iconify-icon icon="carbon:favorite"></iconify-icon>
+                    Health
+                </span>
+                <div class="cds-recipe-card__health-bar">
+                    <div class="cds-recipe-card__health-fill" style="width: {{ recipe.healthiness_score }}%"></div>
+                </div>
+                <span class="cds-recipe-card__health-score">{{ recipe.healthiness_score }}</span>
+            </div>
             {% endif %}
         </div>
     </article>
     {% endfor %}
+
+    <!-- Infinite Scroll Sentinel (inside grid) -->
+    {% set next_from = (from_|default(0)) + (size|default(10)) %}
+    {% if next_from < total %}
+    <div class="cds-infinite-scroll-sentinel"
+         hx-post="/search"
+         hx-trigger="intersect once"
+         hx-swap="outerHTML"
+         hx-include="#search-form, #filter-form"
+         hx-vals='{"from": {{ next_from }}, "append": "true"}'>
+        <div class="cds-loading-indicator">
+            <iconify-icon icon="carbon:circle-dash" class="cds-loading-spinner"></iconify-icon>
+            <span>Loading more recipes...</span>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
-{% elif query %}
-<div class="no-results">
-    <h3>No Results Found</h3>
-    <p>No recipes found for "{{ query }}". Try:</p>
-    <ul>
-        <li>Using different keywords (e.g., "pasta" instead of "spaghetti")</li>
-        <li>Checking your spelling</li>
-        <li>Using broader terms (e.g., "chicken" instead of "chicken parmesan")</li>
-    </ul>
+{% elif query is defined and query %}
+<!-- No Results State -->
+<div class="cds-empty-state cds-empty-state--no-results">
+    <div class="cds-empty-state__icon">
+        <iconify-icon icon="carbon:search"></iconify-icon>
+    </div>
+    <h3 class="cds-empty-state__title">No recipes found</h3>
+    <p class="cds-empty-state__description">We couldn't find any recipes for "<strong>{{ query }}</strong>"</p>
+    <div class="cds-empty-state__suggestions">
+        <p>Try:</p>
+        <ul>
+            <li>Using different keywords (e.g., "pasta" instead of "spaghetti")</li>
+            <li>Checking your spelling</li>
+            <li>Using broader terms (e.g., "chicken" instead of "chicken parmesan")</li>
+            <li>Removing some filters</li>
+        </ul>
+    </div>
 </div>
 
 {% else %}
-<div class="default-state">
-    <h3>Start Searching</h3>
-    <p>Type in the search box above to find recipes. Try searching for:</p>
-    <ul class="search-suggestions">
-        <li><strong>Ingredients:</strong> "chocolate", "chicken", "pasta"</li>
-        <li><strong>Cuisine:</strong> "italian", "asian", "mexican"</li>
-        <li><strong>Dishes:</strong> "pizza", "soup", "salad"</li>
-    </ul>
+<!-- Initial Empty State -->
+<div class="cds-empty-state cds-empty-state--initial">
+    <div class="cds-empty-state__icon">
+        <iconify-icon icon="carbon:noodle-bowl"></iconify-icon>
+    </div>
+    <h3 class="cds-empty-state__title">Start searching to discover recipes</h3>
+    <p class="cds-empty-state__description">Search through 62,000+ recipes from cuisines around the world</p>
+    <div class="cds-empty-state__suggestions">
+        <p>Try searching for:</p>
+        <div class="cds-suggestion-chips">
+            <button type="button" class="cds-suggestion-chip" onclick="suggestSearch('chocolate cake')">
+                <iconify-icon icon="carbon:cake"></iconify-icon>
+                chocolate cake
+            </button>
+            <button type="button" class="cds-suggestion-chip" onclick="suggestSearch('pasta')">
+                <iconify-icon icon="carbon:restaurant"></iconify-icon>
+                pasta
+            </button>
+            <button type="button" class="cds-suggestion-chip" onclick="suggestSearch('chicken')">
+                <iconify-icon icon="carbon:restaurant"></iconify-icon>
+                chicken
+            </button>
+            <button type="button" class="cds-suggestion-chip" onclick="suggestSearch('salad')">
+                <iconify-icon icon="carbon:apple"></iconify-icon>
+                salad
+            </button>
+        </div>
+    </div>
 </div>
+<script>
+function suggestSearch(term) {
+    const searchInput = document.querySelector('.cds-search__input');
+    if (searchInput) {
+        searchInput.value = term;
+        searchInput.dispatchEvent(new Event('keyup'));
+        // Show clear button
+        const clearButton = document.querySelector('.cds-search__clear');
+        if (clearButton) clearButton.style.display = 'flex';
+    }
+}
+</script>
 {% endif %}
-
-<style>
-.search-summary {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f0f8ff;
-    border-left: 4px solid #4CAF50;
-    border-radius: 4px;
-}
-.search-summary h3 {
-    margin: 0 0 5px 0;
-    color: #333;
-}
-.search-summary p {
-    margin: 0;
-    color: #666;
-}
-.results {
-    margin-top: 20px;
-}
-.recipe {
-    border: 1px solid #ddd;
-    margin: 15px 0;
-    padding: 15px;
-    border-radius: 8px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.recipe h4 {
-    margin: 0 0 10px 0;
-    color: #333;
-    font-size: 1.2em;
-}
-.description {
-    font-style: italic;
-    color: #666;
-    margin: 10px 0;
-    line-height: 1.4;
-}
-.recipe-meta {
-    margin: 15px 0;
-}
-.recipe-meta span {
-    display: inline-block;
-    margin-right: 10px;
-    margin-bottom: 5px;
-    background: #f0f0f0;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    color: #555;
-}
-.recipe-meta .cuisines { background: #e8f5e8; }
-.recipe-meta .difficulty { background: #fff2e8; }
-.recipe-meta .prep-time { background: #e8f0ff; }
-.recipe-meta .cook-time { background: #ffe8f0; }
-.recipe-meta .healthiness { background: #f0e8ff; }
-
-.no-results {
-    text-align: center;
-    margin: 40px 0;
-    padding: 30px;
-    background: #fff9e6;
-    border: 1px solid #ffd700;
-    border-radius: 8px;
-}
-.no-results h3 {
-    color: #cc8800;
-    margin-bottom: 15px;
-}
-.no-results ul {
-    text-align: left;
-    display: inline-block;
-    margin: 15px 0;
-}
-.no-results li {
-    margin: 5px 0;
-    color: #666;
-}
-
-.default-state {
-    text-align: center;
-    margin: 40px 0;
-    padding: 30px;
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-}
-.default-state h3 {
-    color: #333;
-    margin-bottom: 15px;
-}
-.search-suggestions {
-    text-align: left;
-    display: inline-block;
-    margin: 15px 0;
-}
-.search-suggestions li {
-    margin: 8px 0;
-    color: #666;
-}
-.search-suggestions strong {
-    color: #4CAF50;
-}
-</style>

@@ -1,0 +1,106 @@
+<!-- Append template for infinite scroll - returns just new cards and updated sentinel -->
+{% for recipe in recipes %}
+<article class="cds-recipe-card">
+    <!-- Card Header -->
+    <div class="cds-recipe-card__header">
+        <h3 class="cds-recipe-card__title">{{ recipe.recipe_title }}</h3>
+        {% if recipe.difficulty %}
+        <span class="cds-tag cds-tag--difficulty cds-tag--{{ recipe.difficulty|lower }}">
+            {% if recipe.difficulty|lower == 'easy' %}
+            <iconify-icon icon="carbon:skill-level-basic"></iconify-icon>
+            {% elif recipe.difficulty|lower == 'medium' %}
+            <iconify-icon icon="carbon:skill-level-intermediate"></iconify-icon>
+            {% else %}
+            <iconify-icon icon="carbon:skill-level-advanced"></iconify-icon>
+            {% endif %}
+            {{ recipe.difficulty|title }}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Description -->
+    {% if recipe.description %}
+    <p class="cds-recipe-card__description">{{ recipe.description[:150] }}{% if recipe.description|length > 150 %}...{% endif %}</p>
+    {% endif %}
+
+    <!-- Tags Row -->
+    <div class="cds-recipe-card__tags">
+        {% if recipe.cuisine_list %}
+        {% for cuisine in recipe.cuisine_list[:3] %}
+        <span class="cds-tag cds-tag--cuisine">
+            <iconify-icon icon="carbon:restaurant"></iconify-icon>
+            {{ cuisine|title }}
+        </span>
+        {% endfor %}
+        {% if recipe.cuisine_list|length > 3 %}
+        <span class="cds-tag cds-tag--more">+{{ recipe.cuisine_list|length - 3 }}</span>
+        {% endif %}
+        {% endif %}
+
+        {% if recipe.is_vegan %}
+        <span class="cds-tag cds-tag--dietary cds-tag--vegan">Vegan</span>
+        {% elif recipe.is_vegetarian %}
+        <span class="cds-tag cds-tag--dietary cds-tag--vegetarian">Vegetarian</span>
+        {% endif %}
+
+        {% if recipe.is_gluten_free %}
+        <span class="cds-tag cds-tag--dietary cds-tag--gf">GF</span>
+        {% endif %}
+
+        {% if recipe.is_dairy_free %}
+        <span class="cds-tag cds-tag--dietary cds-tag--df">DF</span>
+        {% endif %}
+
+        {% if recipe.is_nut_free %}
+        <span class="cds-tag cds-tag--dietary cds-tag--nf">NF</span>
+        {% endif %}
+    </div>
+
+    <!-- Time & Health Info -->
+    <div class="cds-recipe-card__meta">
+        <div class="cds-recipe-card__times">
+            {% if recipe.est_prep_time_min %}
+            <span class="cds-recipe-card__time">
+                <iconify-icon icon="carbon:time"></iconify-icon>
+                {{ recipe.est_prep_time_min }} min prep
+            </span>
+            {% endif %}
+            {% if recipe.est_cook_time_min %}
+            <span class="cds-recipe-card__time">
+                <iconify-icon icon="carbon:flame"></iconify-icon>
+                {{ recipe.est_cook_time_min }} min cook
+            </span>
+            {% endif %}
+        </div>
+
+        {% if recipe.healthiness_score %}
+        <div class="cds-recipe-card__health">
+            <span class="cds-recipe-card__health-label">
+                <iconify-icon icon="carbon:favorite"></iconify-icon>
+                Health
+            </span>
+            <div class="cds-recipe-card__health-bar">
+                <div class="cds-recipe-card__health-fill" style="width: {{ recipe.healthiness_score }}%"></div>
+            </div>
+            <span class="cds-recipe-card__health-score">{{ recipe.healthiness_score }}</span>
+        </div>
+        {% endif %}
+    </div>
+</article>
+{% endfor %}
+
+<!-- Updated Infinite Scroll Sentinel -->
+{% set next_from = from_ + size %}
+{% if next_from < total %}
+<div class="cds-infinite-scroll-sentinel"
+     hx-post="/search"
+     hx-trigger="intersect once"
+     hx-swap="outerHTML"
+     hx-include="#search-form, #filter-form"
+     hx-vals='{"from": {{ next_from }}, "append": "true"}'>
+    <div class="cds-loading-indicator">
+        <iconify-icon icon="carbon:circle-dash" class="cds-loading-spinner"></iconify-icon>
+        <span>Loading more recipes...</span>
+    </div>
+</div>
+{% endif %}
