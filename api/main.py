@@ -49,6 +49,8 @@ AGGREGATION_CONFIGS = {
     "cuisines": {"terms": {"field": "cuisine_list.keyword", "size": 1000, "order": {"_key": "asc"}}},
     "difficulty_levels": {"terms": {"field": "difficulty.keyword", "size": 50, "order": {"_key": "asc"}}},
     "dietary_profiles": {"terms": {"field": "dietary_profile.keyword", "size": 50, "order": {"_key": "asc"}}},
+    "is_vegetarian_count": {"filter": {"term": {"is_vegetarian": True}}},
+    "is_dairy_free_count": {"filter": {"term": {"is_dairy_free": True}}},
     "healthiness_stats": {"stats": {"field": "healthiness_score"}},
     "prep_time_ranges": {
         "range": {
@@ -109,6 +111,10 @@ def parse_aggregations(aggs_data: dict) -> Aggregations:
     cook_time_ranges = parse_bucket_agg("cook_time_ranges")
     total_time_ranges = parse_bucket_agg("total_time_ranges")
 
+    # Parse filter aggregations for dietary counts
+    is_vegetarian_count = aggs_data.get("is_vegetarian_count", {}).get("doc_count")
+    is_dairy_free_count = aggs_data.get("is_dairy_free_count", {}).get("doc_count")
+
     # Parse healthiness stats (special case)
     healthiness_stats = None
     if "healthiness_stats" in aggs_data:
@@ -124,6 +130,8 @@ def parse_aggregations(aggs_data: dict) -> Aggregations:
         cuisines=cuisines,
         difficulty_levels=difficulty_levels,
         dietary_profiles=dietary_profiles,
+        is_vegetarian_count=is_vegetarian_count,
+        is_dairy_free_count=is_dairy_free_count,
         healthiness_stats=healthiness_stats,
         prep_time_ranges=prep_time_ranges,
         cook_time_ranges=cook_time_ranges,
@@ -200,6 +208,8 @@ def build_search_query(request: SearchRequest) -> dict:
         (request.is_gluten_free, "is_gluten_free"),
         (request.is_dairy_free, "is_dairy_free"),
         (request.is_nut_free, "is_nut_free"),
+        (request.is_kosher, "is_kosher"),
+        (request.is_halal, "is_halal"),
     ]
 
     for value, field in dietary_filters:
@@ -325,6 +335,8 @@ async def root(request: Request):
         "is_gluten_free": None,
         "is_dairy_free": None,
         "is_nut_free": None,
+        "is_kosher": None,
+        "is_halal": None,
         "max_prep_time": None,
         "max_cook_time": None,
         "min_healthiness": None,
@@ -419,6 +431,8 @@ async def search_recipes(
     is_gluten_free: Optional[str] = Form(None),
     is_dairy_free: Optional[str] = Form(None),
     is_nut_free: Optional[str] = Form(None),
+    is_kosher: Optional[str] = Form(None),
+    is_halal: Optional[str] = Form(None),
     max_prep_time: Optional[str] = Form(None),
     max_cook_time: Optional[str] = Form(None),
     min_healthiness: Optional[str] = Form(None),
@@ -461,6 +475,8 @@ async def search_recipes(
             is_gluten_free=parse_bool(is_gluten_free),
             is_dairy_free=parse_bool(is_dairy_free),
             is_nut_free=parse_bool(is_nut_free),
+            is_kosher=parse_bool(is_kosher),
+            is_halal=parse_bool(is_halal),
             max_prep_time=parse_int(max_prep_time),
             max_cook_time=parse_int(max_cook_time),
             min_healthiness=parse_int(min_healthiness)
@@ -504,6 +520,8 @@ async def search_recipes(
             "is_gluten_free": parse_bool(is_gluten_free),
             "is_dairy_free": parse_bool(is_dairy_free),
             "is_nut_free": parse_bool(is_nut_free),
+            "is_kosher": parse_bool(is_kosher),
+            "is_halal": parse_bool(is_halal),
             "max_prep_time": parse_int(max_prep_time),
             "max_cook_time": parse_int(max_cook_time),
             "min_healthiness": parse_int(min_healthiness),

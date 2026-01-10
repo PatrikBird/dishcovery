@@ -56,6 +56,8 @@ class SearchRequest(BaseModel):
         None, description="Filter for dairy-free recipes"
     )
     is_nut_free: Optional[bool] = Field(None, description="Filter for nut-free recipes")
+    is_kosher: Optional[bool] = Field(None, description="Filter for kosher recipes")
+    is_halal: Optional[bool] = Field(None, description="Filter for halal recipes")
 
     min_healthiness: Optional[int] = Field(
         None, ge=0, le=100, description="Minimum healthiness score (0-100)", example=70
@@ -125,6 +127,12 @@ class Aggregations(BaseModel):
     )
     dietary_profiles: Optional[List[AggregationBucket]] = Field(
         None, description="Recipe count by dietary profile (vegan, vegetarian, etc.)"
+    )
+    is_vegetarian_count: Optional[int] = Field(
+        None, description="Count of vegetarian recipes"
+    )
+    is_dairy_free_count: Optional[int] = Field(
+        None, description="Count of dairy-free recipes"
     )
     healthiness_stats: Optional[AggregationStats] = Field(
         None, description="Healthiness score statistics"

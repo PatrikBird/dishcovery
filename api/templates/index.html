@@ -181,6 +181,18 @@
                                     displayValue = 'Nut-Free';
                                 }
                                 break;
+                            case 'is_kosher':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Kosher';
+                                }
+                                break;
+                            case 'is_halal':
+                                if (value === 'true') {
+                                    label = 'Dietary';
+                                    displayValue = 'Halal';
+                                }
+                                break;
                             case 'max_prep_time':
                                 if (value !== '999') {
                                     label = 'Prep Time';

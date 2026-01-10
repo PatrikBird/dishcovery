@@ -117,32 +117,48 @@
                             <input type="checkbox" name="is_vegetarian" value="true" class="cds-checkbox__input">
                             <span class="cds-checkbox__checkmark"></span>
                             <span class="cds-checkbox__label-text">Vegetarian</span>
-                            {% if dietary_counts and dietary_counts.get('vegetarian') %}
-                            <span class="cds-filter-count">({{ dietary_counts.get('vegetarian') }})</span>
+                            {% if aggregations and aggregations.is_vegetarian_count %}
+                            <span class="cds-filter-count">({{ aggregations.is_vegetarian_count }})</span>
                             {% endif %}
                         </label>
                         <label class="cds-checkbox">
                             <input type="checkbox" name="is_gluten_free" value="true" class="cds-checkbox__input">
                             <span class="cds-checkbox__checkmark"></span>
                             <span class="cds-checkbox__label-text">Gluten-Free</span>
-                            {% if dietary_counts and dietary_counts.get('gluten-free') %}
-                            <span class="cds-filter-count">({{ dietary_counts.get('gluten-free') }})</span>
+                            {% if dietary_counts and dietary_counts.get('gluten_free') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('gluten_free') }})</span>
                             {% endif %}
                         </label>
                         <label class="cds-checkbox">
                             <input type="checkbox" name="is_dairy_free" value="true" class="cds-checkbox__input">
                             <span class="cds-checkbox__checkmark"></span>
                             <span class="cds-checkbox__label-text">Dairy-Free</span>
-                            {% if dietary_counts and dietary_counts.get('dairy-free') %}
-                            <span class="cds-filter-count">({{ dietary_counts.get('dairy-free') }})</span>
+                            {% if aggregations and aggregations.is_dairy_free_count %}
+                            <span class="cds-filter-count">({{ aggregations.is_dairy_free_count }})</span>
                             {% endif %}
                         </label>
                         <label class="cds-checkbox">
                             <input type="checkbox" name="is_nut_free" value="true" class="cds-checkbox__input">
                             <span class="cds-checkbox__checkmark"></span>
                             <span class="cds-checkbox__label-text">Nut-Free</span>
-                            {% if dietary_counts and dietary_counts.get('nut-free') %}
-                            <span class="cds-filter-count">({{ dietary_counts.get('nut-free') }})</span>
+                            {% if dietary_counts and dietary_counts.get('nut_free') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('nut_free') }})</span>
+                            {% endif %}
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_kosher" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Kosher</span>
+                            {% if dietary_counts and dietary_counts.get('kosher') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('kosher') }})</span>
+                            {% endif %}
+                        </label>
+                        <label class="cds-checkbox">
+                            <input type="checkbox" name="is_halal" value="true" class="cds-checkbox__input">
+                            <span class="cds-checkbox__checkmark"></span>
+                            <span class="cds-checkbox__label-text">Halal</span>
+                            {% if dietary_counts and dietary_counts.get('halal') %}
+                            <span class="cds-filter-count">({{ dietary_counts.get('halal') }})</span>
                             {% endif %}
                         </label>
                     </div>
